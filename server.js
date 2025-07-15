@@ -5,7 +5,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// In-memory user data
 const users = [
   { name:'User 1',accountType:'smartgen',branch:'Homagama', accountNumber: '1234', pin: '1234', balance: 1000 },
   { name:'User 2',accountType:'ran kekulu',branch:'Kottawa', accountNumber: '4321', pin: '4321', balance: 2000 },
@@ -69,6 +68,26 @@ app.get('/user/:accountNumber', (req, res) => {
     res.status(404).json({ message: 'User not found' });
   }
 });
+
+// Change PIN
+app.post('/changepin', (req, res) => {
+  const { accountNumber, oldPin, newPin } = req.body;
+
+  const user = users.find(
+    u => u.accountNumber === accountNumber && u.pin === oldPin
+  );
+
+  if (user) {
+    user.pin = newPin;
+    res.json({ message: 'PIN changed successfully' });
+  } else {
+    res.status(400).json({ message: 'Invalid account number or old PIN' });
+  }
+});
+
+
+
+
 
 
 
