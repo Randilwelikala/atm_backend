@@ -10,6 +10,11 @@ const users = [
   { name:'User 2',accountType:'ran kekulu',branch:'Kottawa', accountNumber: '4321', pin: '4321', balance: 2000, cardNumber: 1235123512351235},
 ];
 
+const transactions = [];
+
+function createTransaction(accountNumber, type, amount) {
+  return { accountNumber, type, amount, timestamp: new Date() };
+}
 // Login endpoint
 app.post('/login', (req, res) => {
   const { accountNumber, pin } = req.body;
@@ -35,15 +40,26 @@ app.get('/balance/:accountNumber', (req, res) => {
 app.post('/deposit', (req, res) => {
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
-
-  if (!user) return res.status(404).json({ message: 'User not found' });
-  if (amount > 50000) return res.status(400).json({ message: 'Deposit limit exceeded (max 50,000)' });
-
+  const MAX_DEPOSIT = 50000; 
+ 
+  if(amount === undefined || amount === null){
+    res.status(400).json({ message: 'Amount is required' });
+  }
+  if(amount <= 0){
+    res.status(400).json({ message: 'Amount must be greater than zero' });
+  }
+  if(amount > MAX_DEPOSIT){
+    res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
+  }
+  if(!user){
+    res.status(404).json({ message: 'User not found' });
+  }
+  if(amount === undefined || amount === null){
+    res.status(400).json({ message: 'Amount is required' });
+  }
   user.balance += amount;
-  const tx = createTransaction(accountNumber, 'deposit', amount);
-  transactions.push(tx);
+  res.json({ balance: user.balance, message: 'Deposit successful' });
 
-  res.json({ balance: user.balance, receipt: tx });
 });
 
 
