@@ -30,10 +30,22 @@ app.post('/cardLogin', (req, res) => {
   const { cardNumber, pin } = req.body;
   const user = users.find(u => u.cardNumber === cardNumber && u.pin === pin);
   if (user) {
-    res.json({ success: true, balance: user.balance, accountNumber:user.accountNumber });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
+    
   }
+  if (user.cardNumber.length !== 16) {
+    return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
+  }
+  if (!cardNumber) {
+    return res.status(401).json({ success: false, message: 'Enter a card number' });
+  }
+  if (!pin) {
+    return res.status(401).json({ success: false, message: 'Enter a pin number' });
+  } 
+  if (user) {
+    return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
+  }
+
+  res.json({ success: true, balance: user.balance, accountNumber:user.accountNumber });
 });
 
 // Get balance endpoint
