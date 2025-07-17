@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 const users = [
-  { name:'User 1',accountType:'smartgen',branch:'Homagama', accountNumber: '1234', pin: '1234', balance: 1000, cardNumber: 1234123412341234 },
+  { name:'User 1',accountType:'smartgen',branch:'Homagama', accountNumber: '1234', pin: '1234', balance: 900000, cardNumber: '1234123412341234' },
   { name:'User 2',accountType:'ran kekulu',branch:'Kottawa', accountNumber: '4321', pin: '4321', balance: 2000, cardNumber: 1235123512351235},
 ];
 
@@ -21,6 +21,16 @@ app.post('/login', (req, res) => {
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
   if (user) {
     res.json({ success: true, balance: user.balance });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
+  }
+});
+
+app.post('/cardLogin', (req, res) => {
+  const { cardNumber, pin } = req.body;
+  const user = users.find(u => u.cardNumber === cardNumber && u.pin === pin);
+  if (user) {
+    res.json({ success: true, balance: user.balance, accountNumber:user.accountNumber });
   } else {
     res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
   }
@@ -45,11 +55,11 @@ app.post('/deposit', (req, res) => {
   if(amount === undefined || amount === null){
     return res.status(400).json({ message: 'Amount is required' });
   }
-  if(amount <= 0){
-    return res.status(400).json({ message: 'Amount must be greater than zero' });
+  if(amount < 100){
+    return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
   }
-  if(amount > MAX_DEPOSIT){
-    return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
+  if (amount > MAX_DEPOSIT){
+   return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
   }
   if(!user){
     return res.status(404).json({ message: 'User not found' });
@@ -65,44 +75,30 @@ app.post('/deposit', (req, res) => {
 
 // Withdraw money
 app.post('/withdraw', (req, res) => {
+  const maxWithdraw=200000;
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
 
-  if (!user) return res.status(404).json({ message: 'User not found' });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
 
   if (user.balance < amount) {
     return res.status(400).json({ message: 'Insufficient balance' });
+  } 
+
+  if(amount <= 100){
+    return res.status(400).json({ message: 'Amount must be greater than zero' });
+  }
+  if (amount > maxWithdraw){
+   return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
   }
 
-  const denominations = [5000, 1000, 500, 50, 20];
-  const notesToDispense = {};
-  let remaining = amount;
-
-  for (const denom of denominations) {
-    const available = atmCash[denom];
-    const count = Math.min(Math.floor(remaining / denom), available);
-    if (count > 0) {
-      notesToDispense[denom] = count;
-      remaining -= denom * count;
-    }
-  }
-
-  if (remaining !== 0) {
-    return res.status(400).json({ message: 'Cannot dispense amount with available denominations' });
-  }
-
-  // Update ATM cash
-  for (const denom in notesToDispense) {
-    atmCash[denom] -= notesToDispense[denom];
-  }
-
-  // Deduct and record transaction
   user.balance -= amount;
-  const tx = createTransaction(accountNumber, 'withdraw', amount);
-  transactions.push(tx);
-
-  res.json({ balance: user.balance, receipt: tx, notes: notesToDispense });
+  res.json({ balance: user.balance, message: 'Withdraw successful' });
 });
+
+
 
 // Get user details by account number
 app.get('/user/:accountNumber', (req, res) => {
@@ -126,12 +122,7 @@ app.post('/changepin', (req, res) => {
   res.json({ message: 'PIN changed successfully' });
 });
 
-//get transaction history
-app.get('/transactions/:accountNumber', (req, res) => {
-  const { accountNumber } = req.params;
-  const userTxs = transactions.filter(tx => tx.accountNumber === accountNumber);
-  res.json(userTxs);
-});
+
 
 
 app.post('/transfer', (req, res) => {
