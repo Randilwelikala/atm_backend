@@ -43,19 +43,19 @@ app.post('/deposit', (req, res) => {
   const MAX_DEPOSIT = 50000; 
  
   if(amount === undefined || amount === null){
-    res.status(400).json({ message: 'Amount is required' });
+    return res.status(400).json({ message: 'Amount is required' });
   }
   if(amount <= 0){
-    res.status(400).json({ message: 'Amount must be greater than zero' });
+    return res.status(400).json({ message: 'Amount must be greater than zero' });
   }
   if(amount > MAX_DEPOSIT){
-    res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
+    return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
   }
   if(!user){
-    res.status(404).json({ message: 'User not found' });
+    return res.status(404).json({ message: 'User not found' });
   }
   if(amount === undefined || amount === null){
-    res.status(400).json({ message: 'Amount is required' });
+    return res.status(400).json({ message: 'Amount is required' });
   }
   user.balance += amount;
   res.json({ balance: user.balance, message: 'Deposit successful' });
