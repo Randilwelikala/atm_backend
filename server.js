@@ -24,8 +24,16 @@ const transactions = [];
 function createTransaction(accountNumber, type, amount) {
   return { accountNumber, type, amount, timestamp: new Date() };
 }
+
+function authMiddleware(req, res, next) {
+  if (!req.session.user || !req.session.user.accountNumber) {
+    return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+  }
+  next();
+}
+
 // Login endpoint
-app.post('/login', (req, res) => {
+app.post('/login',authMiddleware, (req, res) => {
   const { accountNumber, pin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
   if (user) {
@@ -37,29 +45,37 @@ app.post('/login', (req, res) => {
 
 app.post('/cardLogin', (req, res) => {
   const { cardNumber, pin } = req.body;
-  const user = users.find(u => u.cardNumber === cardNumber && u.pin === pin);
-  if (user) {
-    
-  }
-  if (user.cardNumber.length !== 16) {
-    return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
-  }
+
   if (!cardNumber) {
     return res.status(401).json({ success: false, message: 'Enter a card number' });
   }
   if (!pin) {
     return res.status(401).json({ success: false, message: 'Enter a pin number' });
-  } 
-  if (user) {
-    req.session.user = {cardNumber: user.cardNumber,accountNumber: user.accountNumber};
-    return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
   }
 
-  res.json({ success: true, balance: user.balance, accountNumber:user.accountNumber });
+  const user = users.find(u => u.cardNumber === cardNumber && u.pin === pin);
+
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
+  }
+
+  if (user.cardNumber.length !== 16) {
+    return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
+  }
+
+  // Successful login
+  // req.session.user = { cardNumber: user.cardNumber, accountNumber: user.accountNumber }; // optionally set session
+  return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
+
+  req.session.user = {
+    cardNumber: user.cardNumber,
+    accountNumber: user.accountNumber,
+  };
 });
 
+
 // Get balance endpoint
-app.get('/balance/:accountNumber', (req, res) => {
+app.get('/balance/:accountNumber',authMiddleware, (req, res) => {
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
   if (user) {
     res.json({ balance: user.balance });
@@ -69,7 +85,7 @@ app.get('/balance/:accountNumber', (req, res) => {
 });
 
 // Deposit money
-app.post('/deposit', (req, res) => {
+app.post('/deposit',authMiddleware, (req, res) => {
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
   const MAX_DEPOSIT = 50000; 
@@ -96,7 +112,7 @@ app.post('/deposit', (req, res) => {
 
 
 // Withdraw money
-app.post('/withdraw', (req, res) => {
+app.post('/withdraw',authMiddleware, (req, res) => {
   const maxWithdraw=200000;
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
@@ -123,7 +139,7 @@ app.post('/withdraw', (req, res) => {
 
 
 // Get user details by account number
-app.get('/user/:accountNumber', (req, res) => {
+app.get('/user/:accountNumber',authMiddleware, (req, res) => {
     const user = users.find(u => u.accountNumber === req.params.accountNumber);
   if (user) {
     res.json(user);
@@ -133,12 +149,13 @@ app.get('/user/:accountNumber', (req, res) => {
 });
 
 // Change PIN
-app.post('/changepin', (req, res) => {
+app.post('/changepin', authMiddleware, (req, res) => {
   const { accountNumber, oldPin, newPin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === oldPin);
 
   if (!user) return res.status(400).json({ message: 'Invalid account number or old PIN' });
   if (newPin === oldPin) return res.status(400).json({ message: 'New PIN cannot be same as old PIN' });
+  if (!/^\d{4}$/.test(newPin)) return res.status(400).json({ message: 'New PIN must be exactly 4 digits' });
 
   user.pin = newPin;
   res.json({ message: 'PIN changed successfully' });
@@ -147,7 +164,7 @@ app.post('/changepin', (req, res) => {
 
 
 
-app.post('/transfer', (req, res) => {
+app.post('/transfer',authMiddleware, (req, res) => {
   const { from, to, amount } = req.body;
   if (from === to) return res.status(400).json({ message: 'Cannot transfer to the same account' });
 
@@ -169,7 +186,7 @@ app.post('/transfer', (req, res) => {
 
 
 // OTP
-app.post('/verify-mobile', (req, res) => {
+app.post('/verify-mobile',authMiddleware, (req, res) => {
   const { mobile } = req.body;
   if (!/^07\d{8}$/.test(mobile)) {
     return res.status(400).json({ message: 'Invalid mobile number format' });
@@ -177,6 +194,15 @@ app.post('/verify-mobile', (req, res) => {
   res.json({ otp: '1234' }); // Simulated OTP
 });
 
+app.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ message: 'Failed to logout' });
+    }
+    res.clearCookie('connect.sid'); // clear cookie (default name)
+    return res.json({ message: 'Logout successful' });
+  });
+});
 
 
 
