@@ -20,8 +20,8 @@ app.use(cors({
 
 
 const users = [
-  { name: 'User 1', accountType: 'smartgen', branch: 'Homagama', accountNumber: '1234', pin: '1234', balance: 900000, cardNumber: '1234123412341234' },
-  { name: 'User 2', accountType: 'ran kekulu', branch: 'Kottawa', accountNumber: '4321', pin: '4321', balance: 2000, cardNumber: '1235123512351235' },
+  { name: 'User 1', accountType: 'smartgen', branch: 'Homagama', accountNumber: '1234', pin: '1234', balance: 900000, cardNumber: '1234123412341234', mobile: '0711186189' },
+  { name: 'User 2', accountType: 'ran kekulu', branch: 'Kottawa', accountNumber: '4321', pin: '4321', balance: 2000, cardNumber: '1235123512351235', mobile: '0712345679'},
 ];
 
 const transactions = [];
@@ -169,6 +169,67 @@ app.post('/verify-mobile',  (req, res) => {
   }
   res.json({ otp: '1234' }); // Simulated OTP
 });
+
+// Simple in-memory store for OTPs for demo only
+const otpStore = {};
+
+// Generate and send OTP for cardless withdraw
+app.post('/send-otp', (req, res) => {
+  const { mobile } = req.body;
+  if (!mobile || !/^07\d{8}$/.test(mobile)) {
+    return res.status(400).json({ message: 'Invalid mobile number format' });
+  }
+  
+  // Generate 4-digit OTP for testing (e.g., 1234)
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+  // Store OTP against mobile number, expires after 5 minutes
+  otpStore[mobile] = {
+    otp,
+    expiresAt: Date.now() + 5 * 60 * 1000
+  };
+
+  console.log(`Sending OTP ${otp} to mobile ${mobile}`); // For testing display in console
+
+  res.json({ message: 'OTP sent successfully', otp }); // Sending OTP back in response for testing
+});
+
+// Verify OTP
+app.post('/verify-otp', (req, res) => {
+  const { mobile, otp } = req.body;
+  if (!mobile || !otp) {
+    return res.status(400).json({ message: 'Mobile and OTP are required' });
+  }
+  
+  const record = otpStore[mobile];
+  if (!record) {
+    return res.status(400).json({ message: 'No OTP sent to this mobile' });
+  }
+  
+  if (Date.now() > record.expiresAt) {
+    delete otpStore[mobile];
+    return res.status(400).json({ message: 'OTP expired' });
+  }
+  
+  if (record.otp !== otp) {
+    return res.status(400).json({ message: 'Invalid OTP' });
+  }
+  
+  // OTP verified, delete it to prevent reuse
+  delete otpStore[mobile];
+  
+  // For this demo, assume we also find the user's account number by mobile number
+  // You can modify this logic depending on your user data
+  const user = users.find(u => u.mobile === mobile);
+  
+  if (!user) {
+    return res.status(404).json({ message: 'User not found for this mobile' });
+  }
+  
+  // Send back success + user account number for frontend redirection
+  res.json({ message: 'OTP verified successfully', accountNumber: user.accountNumber });
+});
+
 
 const PORT = 3001;
 app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
