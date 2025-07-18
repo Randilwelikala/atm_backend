@@ -1,9 +1,18 @@
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(session({
+  secret: 'sessionForUserLogin',         
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 5 * 60 * 1000 
+  }
+}));
 
 const users = [
   { name:'User 1',accountType:'smartgen',branch:'Homagama', accountNumber: '1234', pin: '1234', balance: 900000, cardNumber: '1234123412341234' },
@@ -42,6 +51,7 @@ app.post('/cardLogin', (req, res) => {
     return res.status(401).json({ success: false, message: 'Enter a pin number' });
   } 
   if (user) {
+    req.session.user = {cardNumber: user.cardNumber,accountNumber: user.accountNumber};
     return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
   }
 
