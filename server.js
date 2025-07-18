@@ -3,10 +3,6 @@ const cors = require('cors');
 const session = require('express-session');
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:3000', // adjust if needed
-  credentials: true
-}));
 app.use(express.json());
 app.use(session({
   secret: 'sessionForUserLogin',
@@ -40,9 +36,8 @@ function createTransaction(accountNumber, type, amount) {
 app.post('/login', (req, res) => {
   const { accountNumber, pin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
-  if (user) {
-    req.session.user = { accountNumber: user.accountNumber }; // ✅ set session
-    res.json({ success: true, balance: user.balance });
+  if (user) {    
+    res.json({ success: true, balance: user.balance });    
   } else {
     res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
   }
@@ -67,13 +62,6 @@ app.post('/cardLogin', (req, res) => {
   if (cardNumber.toString().length !== 16) {
     return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
   }
-
-  // ✅ Set session
-  req.session.user = {
-    cardNumber: user.cardNumber,
-    accountNumber: user.accountNumber,
-  };
-
   return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
 });
 
@@ -180,28 +168,6 @@ app.post('/verify-mobile',  (req, res) => {
     return res.status(400).json({ message: 'Invalid mobile number format' });
   }
   res.json({ otp: '1234' }); // Simulated OTP
-});
-
-app.post('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.status(500).json({ message: 'Failed to logout' });
-    }
-    res.clearCookie('connect.sid');
-    return res.json({ message: 'Logout successful' });
-  });
-
-
-  // Add this to your backend code (after your session middleware setup)
-
-app.get('/check-session', (req, res) => {
-  if (req.session.user && req.session.user.accountNumber) {
-    res.json({ loggedIn: true, user: req.session.user });
-  } else {
-    res.status(401).json({ loggedIn: false, message: 'No active session' });
-  }
-});
-
 });
 
 const PORT = 3001;
