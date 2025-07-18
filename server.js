@@ -20,9 +20,65 @@ app.use(cors({
 
 
 const users = [
-  { name: 'User 1', accountType: 'smartgen', branch: 'Homagama', accountNumber: '1234', pin: '1234', balance: 900000, cardNumber: '1234123412341234', mobile: '0711186189' },
-  { name: 'User 2', accountType: 'ran kekulu', branch: 'Kottawa', accountNumber: '4321', pin: '4321', balance: 2000, cardNumber: '1235123512351235', mobile: '0712345679'},
+  { 
+    name: 'User 1', 
+    bankName: 'Smart Bank', 
+    accountType: 'smartgen', 
+    branch: 'Homagama', 
+    accountNumber: '123456789012', 
+    pin: '1234', 
+    balance: 900000, 
+    cardNumber: '1234123412341234', 
+    mobile: '0711186189' 
+  },
+  { 
+    name: 'User 2', 
+    bankName: 'Smart Bank', 
+    accountType: 'ran kekulu', 
+    branch: 'Kottawa', 
+    accountNumber: '123456789101', 
+    pin: '4321', 
+    balance: 2000, 
+    cardNumber: '1235123512351235', 
+    mobile: '0712345679'
+  },
+  { 
+    name: 'User 3', 
+    bankName: 'Prime Bank', 
+    accountType: 'premium', 
+    branch: 'Colombo', 
+    accountNumber: '987654321098', 
+    pin: '5678', 
+    balance: 15000, 
+    cardNumber: '9876987698769876', 
+    mobile: '0771234567' 
+  },
+  { 
+    name: 'User 4', 
+    bankName: 'Future Bank', 
+    accountType: 'standard', 
+    branch: 'Galle', 
+    accountNumber: '456789123456', 
+    pin: '8765', 
+    balance: 5000, 
+    cardNumber: '4567456745674567', 
+    mobile: '0759876543' 
+  },
+  { 
+    name: 'User 5', 
+    bankName: 'City Bank', 
+    accountType: 'basic', 
+    branch: 'Matara', 
+    accountNumber: '321098765432', 
+    pin: '1122', 
+    balance: 7500, 
+    cardNumber: '3210321032103210', 
+    mobile: '0701234567' 
+  }
 ];
+
+
+
 
 const transactions = [];
 
@@ -229,6 +285,72 @@ app.post('/verify-otp', (req, res) => {
   // Send back success + user account number for frontend redirection
   res.json({ message: 'OTP verified successfully', accountNumber: user.accountNumber });
 });
+
+
+// Assuming users array with bankName as before
+
+app.post('/transfer-same-bank', (req, res) => {
+  const { from, to, amount } = req.body;
+
+  const sender = users.find(u => u.accountNumber === from);
+  const recipient = users.find(u => u.accountNumber === to);
+
+  if (!sender) return res.status(404).json({ error: 'Sender account not found' });
+  if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
+
+  // Check if banks are the same
+  if (sender.bankName !== recipient.bankName) {
+    return res.status(400).json({ error: 'Accounts belong to different banks. Use the other bank transfer API.' });
+  }
+
+  if (sender.balance < amount) {
+    return res.status(400).json({ error: 'Insufficient funds' });
+  }
+
+  // Deduct and add balance
+  sender.balance -= amount;
+  recipient.balance += amount;
+
+  res.json({
+    from,
+    to,
+    transferred: amount,
+    senderNewBalance: sender.balance,
+    bank: 'Same Bank',
+  });
+});
+
+app.post('/transfer-other-bank', (req, res) => {
+  const { from, to, amount } = req.body;
+
+  const sender = users.find(u => u.accountNumber === from);
+  const recipient = users.find(u => u.accountNumber === to);
+
+  if (!sender) return res.status(404).json({ error: 'Sender account not found' });
+  if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
+
+  // Check if banks are different
+  if (sender.bankName === recipient.bankName) {
+    return res.status(400).json({ error: 'Both accounts belong to the same bank. Use the same bank transfer API.' });
+  }
+
+  if (sender.balance < amount) {
+    return res.status(400).json({ error: 'Insufficient funds' });
+  }
+
+  // Deduct and add balance
+  sender.balance -= amount;
+  recipient.balance += amount;
+
+  res.json({
+    from,
+    to,
+    transferred: amount,
+    senderNewBalance: sender.balance,
+    bank: 'Other Bank',
+  });
+});
+
 
 
 const PORT = 3001;
