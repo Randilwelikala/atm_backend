@@ -49,16 +49,6 @@ const users = [
     branch: 'Colombo', 
     accountNumber: '987654321098', 
     pin: '5678', 
-    balance: 15000, 
-    cardNumber: '9876987698769876', 
-    mobile: '0771234567' 
-  },
-  { 
-    name: 'User 4', 
-    bankName: 'Future Bank', 
-    accountType: 'standard', 
-    branch: 'Galle', 
-    accountNumber: '456789123456', 
     pin: '8765', 
     balance: 5000, 
     cardNumber: '4567456745674567', 
@@ -152,6 +142,32 @@ app.post('/deposit',  (req, res) => {
   res.json({ balance: user.balance, message: 'Deposit successful' });
 });
 
+// app.post('/withdraw',  (req, res) => {
+//   const maxWithdraw = 200000;
+//   const { accountNumber, amount } = req.body;
+//   const user = users.find(u => u.accountNumber === accountNumber);
+
+//   if (!user) {
+//     return res.status(404).json({ message: 'User not found' });
+//   }
+
+//   if (user.balance < amount) {
+//     return res.status(400).json({ message: 'Insufficient balance' });
+//   }
+
+//   if (amount <= 100) {
+//     return res.status(400).json({ message: 'Amount must be greater than zero' });
+//   }
+
+//   if (amount > maxWithdraw) {
+//     return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
+//   }
+
+//   user.balance -= amount;
+//   res.json({ balance: user.balance, message: 'Withdraw successful' });
+// });
+
+
 app.post('/withdraw',  (req, res) => {
   const maxWithdraw = 200000;
   const { accountNumber, amount } = req.body;
@@ -173,9 +189,33 @@ app.post('/withdraw',  (req, res) => {
     return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
   }
 
+  // 💵 Denomination breakdown logic
+  const denominations = [5000, 2000, 1000, 500, 100, 50];
+  let remaining = amount;
+  const breakdown = {};
+
+  for (let note of denominations) {
+    if (remaining >= note) {
+      const count = Math.floor(remaining / note);
+      breakdown[note] = count;
+      remaining -= count * note;
+    }
+  }
+
+  // Reject if cannot dispense exact amount
+  if (remaining > 0) {
+    return res.status(400).json({ message: 'Cannot dispense the exact amount with available denominations' });
+  }
+
   user.balance -= amount;
-  res.json({ balance: user.balance, message: 'Withdraw successful' });
+
+  res.json({ 
+    balance: user.balance, 
+    message: 'Withdraw successful', 
+    breakdown 
+  });
 });
+
 
 app.get('/user/:accountNumber',  (req, res) => {
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
