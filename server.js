@@ -3,6 +3,8 @@ const cors = require('cors');
 const session = require('express-session');
 const app = express();
 
+
+
 app.use(express.json());
 app.use(session({
   secret: 'sessionForUserLogin',
@@ -18,7 +20,14 @@ app.use(cors({
   credentials: true               
 }));
 
-
+const atmCash = {
+    5000: 10,
+    2000: 20,
+    1000: 50,
+    500: 100,
+    100: 200,
+    50: 100
+  };
 const users = [
   { 
     name: 'User 1', 
@@ -78,7 +87,6 @@ function createTransaction(accountNumber, type, amount) {
 
 
 
-// ✅ Login endpoint (session set)
 app.post('/login', (req, res) => {
   const { accountNumber, pin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
@@ -88,6 +96,8 @@ app.post('/login', (req, res) => {
     res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
   }
 });
+
+
 
 app.post('/cardLogin', (req, res) => {
   const { cardNumber, pin } = req.body;
@@ -111,6 +121,9 @@ app.post('/cardLogin', (req, res) => {
   return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
 });
 
+
+
+
 app.get('/balance/:accountNumber',  (req, res) => {
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
   if (user) {
@@ -119,6 +132,9 @@ app.get('/balance/:accountNumber',  (req, res) => {
     res.status(404).json({ message: 'User not found' });
   }
 });
+
+
+
 
 app.post('/deposit',  (req, res) => {
   const { accountNumber, amount } = req.body;
@@ -142,69 +158,43 @@ app.post('/deposit',  (req, res) => {
   res.json({ balance: user.balance, message: 'Deposit successful' });
 });
 
-// app.post('/withdraw',  (req, res) => {
-//   const maxWithdraw = 200000;
-//   const { accountNumber, amount } = req.body;
-//   const user = users.find(u => u.accountNumber === accountNumber);
-
-//   if (!user) {
-//     return res.status(404).json({ message: 'User not found' });
-//   }
-
-//   if (user.balance < amount) {
-//     return res.status(400).json({ message: 'Insufficient balance' });
-//   }
-
-//   if (amount <= 100) {
-//     return res.status(400).json({ message: 'Amount must be greater than zero' });
-//   }
-
-//   if (amount > maxWithdraw) {
-//     return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
-//   }
-
-//   user.balance -= amount;
-//   res.json({ balance: user.balance, message: 'Withdraw successful' });
-// });
 
 
-app.post('/withdraw',  (req, res) => {
+
+app.post('/withdraw', (req, res) => {
   const maxWithdraw = 200000;
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
 
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  if (user.balance < amount) return res.status(400).json({ message: 'Insufficient balance' });
+  if (amount <= 100) return res.status(400).json({ message: 'Amount must be greater than zero' });
+  if (amount > maxWithdraw) return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
 
-  if (user.balance < amount) {
-    return res.status(400).json({ message: 'Insufficient balance' });
-  }
-
-  if (amount <= 100) {
-    return res.status(400).json({ message: 'Amount must be greater than zero' });
-  }
-
-  if (amount > maxWithdraw) {
-    return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
-  }
-
-  // 💵 Denomination breakdown logic
   const denominations = [5000, 2000, 1000, 500, 100, 50];
   let remaining = amount;
   const breakdown = {};
+  const tempATM = { ...atmCash }; 
 
   for (let note of denominations) {
-    if (remaining >= note) {
-      const count = Math.floor(remaining / note);
+    const needed = Math.floor(remaining / note);
+    const available = tempATM[note];
+
+    if (needed > 0 && available > 0) {
+      const count = Math.min(needed, available);
       breakdown[note] = count;
       remaining -= count * note;
+      tempATM[note] -= count;
     }
   }
 
-  // Reject if cannot dispense exact amount
   if (remaining > 0) {
-    return res.status(400).json({ message: 'Cannot dispense the exact amount with available denominations' });
+    return res.status(400).json({ message: 'ATM does not have enough notes to fulfill this request' });
+  }
+
+  // Update actual ATM note counts
+  for (let note in breakdown) {
+    atmCash[note] -= breakdown[note];
   }
 
   user.balance -= amount;
@@ -217,6 +207,10 @@ app.post('/withdraw',  (req, res) => {
 });
 
 
+
+
+
+
 app.get('/user/:accountNumber',  (req, res) => {
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
   if (user) {
@@ -225,6 +219,9 @@ app.get('/user/:accountNumber',  (req, res) => {
     res.status(404).json({ message: 'User not found' });
   }
 });
+
+
+
 
 app.post('/changepin',  (req, res) => {
   const { accountNumber, oldPin, newPin } = req.body;
@@ -235,8 +232,11 @@ app.post('/changepin',  (req, res) => {
   if (!/^\d{4}$/.test(newPin)) return res.status(400).json({ message: 'New PIN must be exactly 4 digits' });
 
   user.pin = newPin;
-  res.json({ message: 'PIN changed successfully' });
+  res.json({ message: 'PIN changed successfull' });
 });
+
+
+
 
 app.post('/transfer',  (req, res) => {
   const { from, to, amount } = req.body;
@@ -263,34 +263,36 @@ app.post('/verify-mobile',  (req, res) => {
   if (!/^07\d{8}$/.test(mobile)) {
     return res.status(400).json({ message: 'Invalid mobile number format' });
   }
-  res.json({ otp: '1234' }); // Simulated OTP
+  res.json({ otp: '1234' }); 
 });
 
-// Simple in-memory store for OTPs for demo only
+
 const otpStore = {};
 
-// Generate and send OTP for cardless withdraw
+
 app.post('/send-otp', (req, res) => {
   const { mobile } = req.body;
   if (!mobile || !/^07\d{8}$/.test(mobile)) {
     return res.status(400).json({ message: 'Invalid mobile number format' });
   }
   
-  // Generate 4-digit OTP for testing (e.g., 1234)
+
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-  // Store OTP against mobile number, expires after 5 minutes
   otpStore[mobile] = {
     otp,
     expiresAt: Date.now() + 5 * 60 * 1000
   };
 
-  console.log(`Sending OTP ${otp} to mobile ${mobile}`); // For testing display in console
+  console.log(`Sending OTP ${otp} to mobile ${mobile}`); 
 
-  res.json({ message: 'OTP sent successfully', otp }); // Sending OTP back in response for testing
+  res.json({ message: 'OTP sent successfully', otp }); 
 });
 
-// Verify OTP
+
+
+
+
 app.post('/verify-otp', (req, res) => {
   const { mobile, otp } = req.body;
   if (!mobile || !otp) {
@@ -311,23 +313,22 @@ app.post('/verify-otp', (req, res) => {
     return res.status(400).json({ message: 'Invalid OTP' });
   }
   
-  // OTP verified, delete it to prevent reuse
-  delete otpStore[mobile];
+   delete otpStore[mobile];
   
-  // For this demo, assume we also find the user's account number by mobile number
-  // You can modify this logic depending on your user data
+  
   const user = users.find(u => u.mobile === mobile);
   
   if (!user) {
     return res.status(404).json({ message: 'User not found for this mobile' });
   }
   
-  // Send back success + user account number for frontend redirection
+  
   res.json({ message: 'OTP verified successfully', accountNumber: user.accountNumber });
 });
 
 
-// Assuming users array with bankName as before
+
+
 
 app.post('/transfer-same-bank', (req, res) => {
   const { from, to, amount } = req.body;
@@ -338,7 +339,7 @@ app.post('/transfer-same-bank', (req, res) => {
   if (!sender) return res.status(404).json({ error: 'Sender account not found' });
   if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
 
-  // Check if banks are the same
+ 
   if (sender.bankName !== recipient.bankName) {
     return res.status(400).json({ error: 'Accounts belong to different banks. Use the other bank transfer API.' });
   }
@@ -346,8 +347,7 @@ app.post('/transfer-same-bank', (req, res) => {
   if (sender.balance < amount) {
     return res.status(400).json({ error: 'Insufficient funds' });
   }
-
-  // Deduct and add balance
+ 
   sender.balance -= amount;
   recipient.balance += amount;
 
@@ -360,6 +360,10 @@ app.post('/transfer-same-bank', (req, res) => {
   });
 });
 
+
+
+
+
 app.post('/transfer-other-bank', (req, res) => {
   const { from, to, amount } = req.body;
 
@@ -369,7 +373,7 @@ app.post('/transfer-other-bank', (req, res) => {
   if (!sender) return res.status(404).json({ error: 'Sender account not found' });
   if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
 
-  // Check if banks are different
+
   if (sender.bankName === recipient.bankName) {
     return res.status(400).json({ error: 'Both accounts belong to the same bank. Use the same bank transfer API.' });
   }
@@ -378,7 +382,6 @@ app.post('/transfer-other-bank', (req, res) => {
     return res.status(400).json({ error: 'Insufficient funds' });
   }
 
-  // Deduct and add balance
   sender.balance -= amount;
   recipient.balance += amount;
 
