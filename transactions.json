@@ -88,6 +88,46 @@
       "breakdown": {
         "1000": 1
       }
+    },
+    {
+      "id": "TXN17533402426784029",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 1000,
+      "balanceAfter": 901000,
+      "timestamp": "2025-07-24T06:57:22.678Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN17533402454397505",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 2000,
+      "balanceAfter": 903000,
+      "timestamp": "2025-07-24T06:57:25.439Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN17533402472896598",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 3000,
+      "balanceAfter": 906000,
+      "timestamp": "2025-07-24T06:57:27.289Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN17533402490959108",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 4000,
+      "balanceAfter": 910000,
+      "timestamp": "2025-07-24T06:57:29.095Z",
+      "status": "success",
+      "breakdown": {}
     }
   ]
 }

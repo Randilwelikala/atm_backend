@@ -191,7 +191,7 @@ app.post('/deposit', async (req, res) => {
     balanceAfter: user.balance,
     timestamp: new Date().toISOString(),
     status: 'success',
-    breakdown
+    breakdown: {}
   };
 
   await db.read();
@@ -338,10 +338,10 @@ app.post('/transfer', async (req, res) => {
     to,
     type: 'transfer',
     amount,
-    balanceAfter: user.balance,
+    balanceAfter: sender.balance,
     timestamp: new Date().toISOString(),
     status: 'success',
-    breakdown
+    breakdown: {}
   };
 
   await db.read();
