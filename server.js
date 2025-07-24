@@ -1,7 +1,13 @@
+const { Low } = require('lowdb');
+const { JSONFile } = require('lowdb/node');
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const app = express();
+const path = require('path');       
+     
+
+
 
 
 
@@ -76,14 +82,34 @@ const users = [
   }
 ];
 
+const dbFile = path.join(__dirname, 'transactions.json');
+const adapter = new JSONFile(dbFile);
+const db = new Low(adapter, { transactions: [] });
+
+
+async function initDB() {
+  await db.read();
+  if (!db.data) {
+    db.data = { transactions: [] };
+    await db.write();
+  }
+}
+
+
+function createTransaction(accountNumber, type, amount) {
+  return { 
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber, 
+    type, 
+    amount, 
+    timestamp: new Date().toISOString() 
+  };
+}
 
 
 
 const transactions = [];
 
-function createTransaction(accountNumber, type, amount) {
-  return { accountNumber, type, amount, timestamp: new Date() };
-}
 
 
 
@@ -161,7 +187,8 @@ app.post('/deposit',  (req, res) => {
 
 
 
-app.post('/withdraw', (req, res) => {
+// Save transaction on withdrawal
+app.post('/withdraw',async (req, res) => {
   const maxWithdraw = 200000;
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
@@ -174,7 +201,7 @@ app.post('/withdraw', (req, res) => {
   const denominations = [5000, 2000, 1000, 500, 100, 50];
   let remaining = amount;
   const breakdown = {};
-  const tempATM = { ...atmCash }; 
+  const tempATM = { ...atmCash };
 
   for (let note of denominations) {
     const needed = Math.floor(remaining / note);
@@ -192,18 +219,43 @@ app.post('/withdraw', (req, res) => {
     return res.status(400).json({ message: 'ATM does not have enough notes to fulfill this request' });
   }
 
-  // Update actual ATM note counts
   for (let note in breakdown) {
     atmCash[note] -= breakdown[note];
   }
 
   user.balance -= amount;
 
-  res.json({ 
-    balance: user.balance, 
-    message: 'Withdraw successful', 
-    breakdown 
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber,
+    type: 'withdraw',
+    amount,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    breakdown
+  };
+
+  await db.read();
+  db.data.transactions.push(txn);
+  await db.write();
+
+  // transactions.push(txn);
+
+  res.json({
+    balance: user.balance,
+    message: 'Withdraw successful',
+    breakdown,
+    transactionId: txn.id
   });
+});
+
+// Get all transactions for a user
+app.get('/transactions', async (req, res) => {
+  const { accountNumber } = req.params;
+  await db.read();
+  const userTxns = db.data.transactions.filter(t => t.accountNumber === accountNumber);
+  res.json(userTxns);
 });
 
 
@@ -396,5 +448,11 @@ app.post('/transfer-other-bank', (req, res) => {
 
 
 
-const PORT = 3001;
-app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
+async function startServer() {
+  await initDB();
+
+  const PORT = 3001;
+  app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
+}
+
+startServer();
