@@ -251,13 +251,43 @@ app.post('/withdraw',async (req, res) => {
   
 });
 
-// Get all transactions for a user
 app.get('/transactions/:accountNumber', async (req, res) => {
   const { accountNumber } = req.params;
   await db.read();
-  const userTxns = db.data.transactions.filter(t => t.accountNumber === accountNumber);
-  res.json(userTxns);
+
+  const txns = db.data.transactions.filter(t =>
+    t.accountNumber === accountNumber || t.from === accountNumber || t.to === accountNumber
+  );
+
+  const formatted = txns.map(t => {
+    if (t.from === accountNumber) {
+      return {
+        ...t,
+        direction: 'debit',
+        displayAmount: `-${t.amount}`
+      };
+    } else if (t.to === accountNumber) {
+      return {
+        ...t,
+        direction: 'credit',
+        displayAmount: `+${t.amount}`
+      };
+    } else if (t.accountNumber === accountNumber) {
+      const isDeposit = t.type.toLowerCase().includes('deposit') || t.type.toLowerCase().includes('in');
+      return {
+        ...t,
+        direction: isDeposit ? 'credit' : 'debit',
+        displayAmount: (isDeposit ? '+' : '-') + t.amount
+      };
+    } else {
+      return t; // fallback
+    }
+  });
+
+  res.json(formatted);
 });
+
+
 
 
 
@@ -304,35 +334,45 @@ app.post('/transfer', async (req, res) => {
   sender.balance -= amount;
   receiver.balance += amount;
 
-  const tx = createTransaction(from, 'transfer-out', amount);
-  const rx = createTransaction(to, 'transfer-in', amount);
-  transactions.push(tx, rx);
+  const timestamp = new Date().toISOString();
 
-  res.json({ message: 'Transfer successful', senderBalance: sender.balance });
-
-  const txn = {
+  // Prepare transactions
+  const senderTxn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    from,
-    to,
-    type: 'transfer',
+    accountNumber: from,
+    type: 'transfer-out',
     amount,
     balanceAfter: sender.balance,
-    timestamp: new Date().toISOString(),
+    timestamp,
     status: 'success',
-    breakdown: {}
+    to,
   };
 
+  const receiverTxn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber: to,
+    type: 'transfer-in',
+    amount,
+    balanceAfter: receiver.balance,
+    timestamp,
+    status: 'success',
+    from,
+  };
+
+  // Write transactions to DB
   await db.read();
-  db.data.transactions.push(txn);
+  if (!db.data) {
+    db.data = { transactions: [] };
+  }
+  db.data.transactions.push(senderTxn, receiverTxn);
   await db.write();
 
-  // transactions.push(txn);
-
+  // Send response only once here
   res.json({
-    balance: user.balance,
     message: 'Transfer successful',
-    breakdown,
-    transactionId: txn.id
+    senderBalance: sender.balance,
+    receiverBalance: receiver.balance,
+    transactions: [senderTxn, receiverTxn],
   });
 });
 
@@ -437,20 +477,35 @@ app.post('/transfer-same-bank', async (req, res) => {
     bank: 'Same Bank',
   });
 
-  const txn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber,
-    type: 'Same Bank Transfer',
-    amount,
-    balanceAfter: user.balance,
-    timestamp: new Date().toISOString(),
-    status: 'success',
-    breakdown:{}
-  };
+await db.read();
 
-  await db.read();
-  db.data.transactions.push(txn);
-  await db.write();
+const timestamp = new Date().toISOString();
+
+const senderTxn = {
+  id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+  accountNumber: from,
+  type: 'transfer-out',
+  amount,
+  balanceAfter: sender.balance,
+  timestamp,
+  status: 'success',
+  to,
+};
+
+const receiverTxn = {
+  id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+  accountNumber: to,
+  type: 'transfer-in',
+  amount,
+  balanceAfter: receiver.balance,
+  timestamp,
+  status: 'success',
+  from,
+};
+
+db.data.transactions.push(senderTxn, receiverTxn);
+await db.write();
+
 
   // transactions.push(txn);
 
@@ -498,20 +553,34 @@ app.post('/transfer-other-bank', async (req, res) => {
   });
 
 
-  const txn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber,
-    type: 'Other Bank Transfer',
-    amount,
-    balanceAfter: user.balance,
-    timestamp: new Date().toISOString(),
-    status: 'success',
-    breakdown
-  };
+await db.read();
 
-  await db.read();
-  db.data.transactions.push(txn);
-  await db.write();
+const timestamp = new Date().toISOString();
+
+const senderTxn = {
+  id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+  accountNumber: from,
+  type: 'transfer-out',
+  amount,
+  balanceAfter: sender.balance,
+  timestamp,
+  status: 'success',
+  to,
+};
+
+const receiverTxn = {
+  id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+  accountNumber: to,
+  type: 'transfer-in',
+  amount,
+  balanceAfter: receiver.balance,
+  timestamp,
+  status: 'success',
+  from,
+};
+
+db.data.transactions.push(senderTxn, receiverTxn);
+await db.write();
 
   // transactions.push(txn);
 
