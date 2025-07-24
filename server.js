@@ -8,6 +8,9 @@ const path = require('path');
      
 
 
+function generateTransactionId() {
+  return 'TXN' + Date.now() + Math.floor(Math.random() * 10000);
+}
 
 
 
@@ -278,38 +281,64 @@ app.post('/withdraw',async (req, res) => {
 
 
 
-app.get('/transactions/:accountNumber', async (req, res) => {
-  const { accountNumber } = req.params;
-  await db.read();
+// app.get('/transactions/:accountNumber', async (req, res) => {
+//   const { accountNumber } = req.params;
+//   await db.read();
 
-  const txns = db.data.transactions.filter(t =>
-    t.accountNumber === accountNumber || t.from === accountNumber || t.to === accountNumber
+//   const txns = db.data.transactions.filter(t =>
+//     t.accountNumber === accountNumber || t.from === accountNumber || t.to === accountNumber
+//   );
+
+//   const formatted = txns.map(t => {
+//     if (t.from === accountNumber) {
+//       return {
+//         ...t,
+//         direction: 'debit',
+//         displayAmount: `-${t.amount}`
+//       };
+//     } else if (t.to === accountNumber) {
+//       return {
+//         ...t,
+//         direction: 'credit',
+//         displayAmount: `+${t.amount}`
+//       };
+//     } else if (t.accountNumber === accountNumber) {
+//       const isDeposit = t.type.toLowerCase().includes('deposit') || t.type.toLowerCase().includes('in');
+//       return {
+//         ...t,
+//         direction: isDeposit ? 'credit' : 'debit',
+//         displayAmount: (isDeposit ? '+' : '-') + t.amount
+//       };
+//     } else {
+//       return t; // fallback
+//     }
+//   });
+
+//   res.json(formatted);
+// });
+
+
+
+
+
+
+
+app.get('/transactions/:accountNumber', (req, res) => {
+  const accountNumber = req.params.accountNumber;
+
+  const userTransactions = transactions.filter(
+    txn => txn.from === accountNumber || txn.to === accountNumber
   );
 
-  const formatted = txns.map(t => {
-    if (t.from === accountNumber) {
-      return {
-        ...t,
-        direction: 'debit',
-        displayAmount: `-${t.amount}`
-      };
-    } else if (t.to === accountNumber) {
-      return {
-        ...t,
-        direction: 'credit',
-        displayAmount: `+${t.amount}`
-      };
-    } else if (t.accountNumber === accountNumber) {
-      const isDeposit = t.type.toLowerCase().includes('deposit') || t.type.toLowerCase().includes('in');
-      return {
-        ...t,
-        direction: isDeposit ? 'credit' : 'debit',
-        displayAmount: (isDeposit ? '+' : '-') + t.amount
-      };
-    } else {
-      return t; // fallback
-    }
-  });
+  // Optional: Format with status and balance type
+  const formatted = userTransactions.map((txn, index) => ({
+    type: txn.from === accountNumber ? 'transfer-out' : 'transfer-in',
+    amount: txn.amount,
+    status: txn.status,
+    time: txn.timestamp,
+    from: txn.from,
+    to: txn.to
+  }));
 
   res.json(formatted);
 });
@@ -348,60 +377,60 @@ app.post('/changepin',  (req, res) => {
 
 
 
-app.post('/transfer', async (req, res) => {
-  const { from, to, amount } = req.body;
-  if (from === to) return res.status(400).json({ message: 'Cannot transfer to the same account' });
+// app.post('/transfer', async (req, res) => {
+//   const { from, to, amount } = req.body;
+//   if (from === to) return res.status(400).json({ message: 'Cannot transfer to the same account' });
 
-  const sender = users.find(u => u.accountNumber === from);
-  const receiver = users.find(u => u.accountNumber === to);
+//   const sender = users.find(u => u.accountNumber === from);
+//   const receiver = users.find(u => u.accountNumber === to);
 
-  if (!sender || !receiver) return res.status(404).json({ message: 'Invalid account number' });
-  if (sender.balance < amount) return res.status(400).json({ message: 'Insufficient funds' });
+//   if (!sender || !receiver) return res.status(404).json({ message: 'Invalid account number' });
+//   if (sender.balance < amount) return res.status(400).json({ message: 'Insufficient funds' });
 
-  sender.balance -= amount;
-  receiver.balance += amount;
+//   sender.balance -= amount;
+//   receiver.balance += amount;
 
-  const timestamp = new Date().toISOString();
+//   const timestamp = new Date().toISOString();
 
-  // Prepare transactions
-  const senderTxn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber: from,
-    type: 'transfer-out',
-    amount,
-    balanceAfter: sender.balance,
-    timestamp,
-    status: 'success',
-    to,
-  };
+//   // Prepare transactions
+//   const senderTxn = {
+//     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+//     accountNumber: from,
+//     type: 'transfer-out',
+//     amount,
+//     balanceAfter: sender.balance,
+//     timestamp,
+//     status: 'success',
+//     to,
+//   };
 
-  const receiverTxn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber: to,
-    type: 'transfer-in',
-    amount,
-    balanceAfter: receiver.balance,
-    timestamp,
-    status: 'success',
-    from,
-  };
+//   const receiverTxn = {
+//     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+//     accountNumber: to,
+//     type: 'transfer-in',
+//     amount,
+//     balanceAfter: receiver.balance,
+//     timestamp,
+//     status: 'success',
+//     from,
+//   };
 
-  // Write transactions to DB
-  await db.read();
-  if (!db.data) {
-    db.data = { transactions: [] };
-  }
-  db.data.transactions.push(senderTxn, receiverTxn);
-  await db.write();
+//   // Write transactions to DB
+//   await db.read();
+//   if (!db.data) {
+//     db.data = { transactions: [] };
+//   }
+//   db.data.transactions.push(senderTxn, receiverTxn);
+//   await db.write();
 
-  // Send response only once here
-  res.json({
-    message: 'Transfer successful',
-    senderBalance: sender.balance,
-    receiverBalance: receiver.balance,
-    transactions: [senderTxn, receiverTxn],
-  });
-});
+//   // Send response only once here
+//   res.json({
+//     message: 'Transfer successful',
+//     senderBalance: sender.balance,
+//     receiverBalance: receiver.balance,
+//     transactions: [senderTxn, receiverTxn],
+//   });
+// });
 
 app.post('/verify-mobile',  (req, res) => {
   const { mobile } = req.body;
@@ -413,6 +442,47 @@ app.post('/verify-mobile',  (req, res) => {
 
 
 const otpStore = {};
+
+
+
+
+
+app.post('/transfer', (req, res) => {
+  const { sender, receiver, amount } = req.body;
+
+  if (!sender || !receiver || !amount) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const senderAcc = accounts.find(acc => acc.number === sender);
+  const receiverAcc = accounts.find(acc => acc.number === receiver);
+
+  if (!senderAcc || !receiverAcc) {
+    return res.status(404).json({ error: 'Account not found' });
+  }
+
+  if (senderAcc.balance < amount) {
+    return res.status(400).json({ error: 'Insufficient balance' });
+  }
+
+  // Perform transfer
+  senderAcc.balance -= amount;
+  receiverAcc.balance += amount;
+
+  const txn = {
+    id: generateTransactionId(),
+    from: sender,
+    to: receiver,
+    amount,
+    timestamp: new Date(),
+    status: 'success'
+  };
+
+  transactions.push(txn);
+
+  res.json({ message: 'Transfer successful', transaction: txn });
+});
+
 
 
 app.post('/send-otp', (req, res) => {
@@ -543,6 +613,7 @@ res.json({
   });
   
 });
+
 
 
 
