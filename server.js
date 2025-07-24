@@ -248,29 +248,7 @@ app.post('/withdraw',async (req, res) => {
 
   user.balance -= amount;
 
-  const txn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber,
-    type: 'withdraw',
-    amount,
-    balanceAfter: user.balance,
-    timestamp: new Date().toISOString(),
-    status: 'success',
-    breakdown
-  };
-
-  await db.read();
-  db.data.transactions.push(txn);
-  await db.write();
-
-  // transactions.push(txn);
-
-  res.json({
-    balance: user.balance,
-    message: 'Withdraw successful',
-    breakdown,
-    transactionId: txn.id
-  });
+  
 });
 
 // Get all transactions for a user
@@ -430,7 +408,7 @@ app.post('/verify-otp', (req, res) => {
 
 
 
-app.post('/transfer-same-bank', (req, res) => {
+app.post('/transfer-same-bank', async (req, res) => {
   const { from, to, amount } = req.body;
 
   const sender = users.find(u => u.accountNumber === from);
@@ -459,6 +437,30 @@ app.post('/transfer-same-bank', (req, res) => {
     bank: 'Same Bank',
   });
 
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber,
+    type: 'withdraw',
+    amount,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    breakdown
+  };
+
+  await db.read();
+  db.data.transactions.push(txn);
+  await db.write();
+
+  // transactions.push(txn);
+
+  res.json({
+    balance: user.balance,
+    message: 'Withdraw successful',
+    breakdown,
+    transactionId: txn.id
+  });
+
   
 });
 
@@ -466,7 +468,7 @@ app.post('/transfer-same-bank', (req, res) => {
 
 
 
-app.post('/transfer-other-bank', (req, res) => {
+app.post('/transfer-other-bank', async (req, res) => {
   const { from, to, amount } = req.body;
 
   const sender = users.find(u => u.accountNumber === from);
@@ -493,6 +495,31 @@ app.post('/transfer-other-bank', (req, res) => {
     transferred: amount,
     senderNewBalance: sender.balance,
     bank: 'Other Bank',
+  });
+
+
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber,
+    type: 'withdraw',
+    amount,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    breakdown
+  };
+
+  await db.read();
+  db.data.transactions.push(txn);
+  await db.write();
+
+  // transactions.push(txn);
+
+  res.json({
+    balance: user.balance,
+    message: 'Withdraw successful',
+    breakdown,
+    transactionId: txn.id
   });
 });
 
