@@ -274,7 +274,7 @@ app.post('/withdraw',async (req, res) => {
 });
 
 // Get all transactions for a user
-app.get('/transactions', async (req, res) => {
+app.get('/transactions/:accountNumber', async (req, res) => {
   const { accountNumber } = req.params;
   await db.read();
   const userTxns = db.data.transactions.filter(t => t.accountNumber === accountNumber);
