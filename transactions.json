@@ -1,0 +1,24 @@
+{
+  "accounts": [],
+  "transactions": [
+    {
+      "id": "TXN17533484082128718",
+      "accountNumber": "123456789012",
+      "type": "transfer-out",
+      "amount": 10000,
+      "balanceAfter": 888500,
+      "timestamp": "2025-07-24T09:13:28.212Z",
+      "status": "success",
+      "to": "123456789101"
+    },
+    {
+      "id": "TXN17533484082123764",
+      "accountNumber": "123456789101",
+      "type": "transfer-in",
+      "amount": 10000,
+      "timestamp": "2025-07-24T09:13:28.212Z",
+      "status": "success",
+      "from": "123456789012"
+    }
+  ]
+}

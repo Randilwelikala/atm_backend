@@ -181,7 +181,7 @@ app.post('/deposit', async (req, res) => {
   }
 
   user.balance += amount;
-  res.json({ balance: user.balance, message: 'Deposit successful' });
+  // res.json({ balance: user.balance, message: 'Deposit successful' });
 
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
@@ -247,9 +247,36 @@ app.post('/withdraw',async (req, res) => {
   }
 
   user.balance -= amount;
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber,
+    type: 'withdraw',
+    amount,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    breakdown
+  };
+
+  await db.read();
+  db.data.transactions.push(txn);
+  await db.write();
+
+  // transactions.push(txn);
+
+  res.json({
+    balance: user.balance,
+    message: 'Withdraw successful',
+    breakdown,
+    transactionId: txn.id
+  });
 
   
 });
+
+
+
+
 
 app.get('/transactions/:accountNumber', async (req, res) => {
   const { accountNumber } = req.params;
@@ -469,15 +496,17 @@ app.post('/transfer-same-bank', async (req, res) => {
   sender.balance -= amount;
   recipient.balance += amount;
 
-  res.json({
-    from,
-    to,
-    transferred: amount,
-    senderNewBalance: sender.balance,
-    bank: 'Same Bank',
-  });
+  // res.json({
+  //   from,
+  //   to,
+  //   transferred: amount,
+  //   senderNewBalance: sender.balance,
+  //   bank: 'Same Bank',
+  // });
 
 await db.read();
+if (!db.data) db.data = { transactions: [] };
+
 
 const timestamp = new Date().toISOString();
 
@@ -497,7 +526,7 @@ const receiverTxn = {
   accountNumber: to,
   type: 'transfer-in',
   amount,
-  balanceAfter: receiver.balance,
+  balanceAfter: recipient.balance,
   timestamp,
   status: 'success',
   from,
@@ -506,16 +535,12 @@ const receiverTxn = {
 db.data.transactions.push(senderTxn, receiverTxn);
 await db.write();
 
-
-  // transactions.push(txn);
-
-  res.json({
-    balance: user.balance,
+res.json({
     message: 'Transfer successful',
-    breakdown,
-    transactionId: txn.id
+    senderBalance: sender.balance,
+    receiverBalance: recipient.balance,
+    transactions: [senderTxn, receiverTxn],
   });
-
   
 });
 
@@ -542,18 +567,11 @@ app.post('/transfer-other-bank', async (req, res) => {
   }
 
   sender.balance -= amount;
-  recipient.balance += amount;
-
-  res.json({
-    from,
-    to,
-    transferred: amount,
-    senderNewBalance: sender.balance,
-    bank: 'Other Bank',
-  });
+  recipient.balance += amount;  
 
 
 await db.read();
+ if (!db.data) db.data = { transactions: [] };
 
 const timestamp = new Date().toISOString();
 
@@ -573,7 +591,7 @@ const receiverTxn = {
   accountNumber: to,
   type: 'transfer-in',
   amount,
-  balanceAfter: receiver.balance,
+  // balanceAfter: receiver.balance,
   timestamp,
   status: 'success',
   from,
@@ -584,12 +602,13 @@ await db.write();
 
   // transactions.push(txn);
 
-  res.json({
-    balance: user.balance,
-    message: 'Transfer successful',
-    breakdown,
-    transactionId: txn.id
-  });
+ res.json({
+  message: 'Transfer successful',
+  senderBalance: sender.balance,
+  receiverBalance: recipient.balance,
+  transactions: [senderTxn, receiverTxn]
+});
+
 });
 
 
