@@ -591,7 +591,7 @@ const receiverTxn = {
   accountNumber: to,
   type: 'transfer-in',
   amount,
-  // balanceAfter: receiver.balance,
+  balanceAfter: recipient.balance,
   timestamp,
   status: 'success',
   from,

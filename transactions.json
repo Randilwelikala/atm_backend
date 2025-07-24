@@ -19,6 +19,26 @@
       "timestamp": "2025-07-24T09:13:28.212Z",
       "status": "success",
       "from": "123456789012"
+    },
+    {
+      "id": "TXN17533493264089382",
+      "accountNumber": "123456789012",
+      "type": "transfer-out",
+      "amount": 2800,
+      "balanceAfter": 897200,
+      "timestamp": "2025-07-24T09:28:46.407Z",
+      "status": "success",
+      "to": "123456789101"
+    },
+    {
+      "id": "TXN17533493264082499",
+      "accountNumber": "123456789101",
+      "type": "transfer-in",
+      "amount": 2800,
+      "balanceAfter": 4800,
+      "timestamp": "2025-07-24T09:28:46.407Z",
+      "status": "success",
+      "from": "123456789012"
     }
   ]
 }
