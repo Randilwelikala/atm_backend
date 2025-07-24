@@ -440,12 +440,12 @@ app.post('/transfer-same-bank', async (req, res) => {
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber,
-    type: 'withdraw',
+    type: 'Same Bank Transfer',
     amount,
     balanceAfter: user.balance,
     timestamp: new Date().toISOString(),
     status: 'success',
-    breakdown
+    breakdown:{}
   };
 
   await db.read();
@@ -456,7 +456,7 @@ app.post('/transfer-same-bank', async (req, res) => {
 
   res.json({
     balance: user.balance,
-    message: 'Withdraw successful',
+    message: 'Transfer successful',
     breakdown,
     transactionId: txn.id
   });
@@ -501,7 +501,7 @@ app.post('/transfer-other-bank', async (req, res) => {
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber,
-    type: 'withdraw',
+    type: 'Other Bank Transfer',
     amount,
     balanceAfter: user.balance,
     timestamp: new Date().toISOString(),
@@ -517,7 +517,7 @@ app.post('/transfer-other-bank', async (req, res) => {
 
   res.json({
     balance: user.balance,
-    message: 'Withdraw successful',
+    message: 'Transfer successful',
     breakdown,
     transactionId: txn.id
   });
