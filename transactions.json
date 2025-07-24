@@ -2,97 +2,24 @@
   "accounts": [],
   "transactions": [
     {
-      "id": "TXN17533484082128718",
+      "id": "TXN17533559681554830",
       "accountNumber": "123456789012",
       "type": "transfer-out",
-      "amount": 10000,
-      "balanceAfter": 888500,
-      "timestamp": "2025-07-24T09:13:28.212Z",
+      "amount": 8600,
+      "balanceAfter": 891400,
+      "timestamp": "2025-07-24T11:19:28.155Z",
       "status": "success",
       "to": "123456789101"
     },
     {
-      "id": "TXN17533484082123764",
+      "id": "TXN17533559681557890",
       "accountNumber": "123456789101",
       "type": "transfer-in",
-      "amount": 10000,
-      "timestamp": "2025-07-24T09:13:28.212Z",
+      "amount": 8600,
+      "balanceAfter": 10600,
+      "timestamp": "2025-07-24T11:19:28.155Z",
       "status": "success",
       "from": "123456789012"
-    },
-    {
-      "id": "TXN17533493264089382",
-      "accountNumber": "123456789012",
-      "type": "transfer-out",
-      "amount": 2800,
-      "balanceAfter": 897200,
-      "timestamp": "2025-07-24T09:28:46.407Z",
-      "status": "success",
-      "to": "123456789101"
-    },
-    {
-      "id": "TXN17533493264082499",
-      "accountNumber": "123456789101",
-      "type": "transfer-in",
-      "amount": 2800,
-      "balanceAfter": 4800,
-      "timestamp": "2025-07-24T09:28:46.407Z",
-      "status": "success",
-      "from": "123456789012"
-    },
-    {
-      "id": "TXN17533532370933703",
-      "accountNumber": "123456789012",
-      "type": "transfer-out",
-      "amount": 5900,
-      "balanceAfter": 894100,
-      "timestamp": "2025-07-24T10:33:57.093Z",
-      "status": "success",
-      "to": "123456789101"
-    },
-    {
-      "id": "TXN17533532370932176",
-      "accountNumber": "123456789101",
-      "type": "transfer-in",
-      "amount": 5900,
-      "balanceAfter": 7900,
-      "timestamp": "2025-07-24T10:33:57.093Z",
-      "status": "success",
-      "from": "123456789012"
-    },
-    {
-      "id": "TXN17533536054681302",
-      "accountNumber": "123456789012",
-      "type": "transfer-out",
-      "amount": 1000,
-      "balanceAfter": 899000,
-      "timestamp": "2025-07-24T10:40:05.468Z",
-      "status": "success",
-      "to": "123456789101"
-    },
-    {
-      "id": "TXN17533536054689940",
-      "accountNumber": "123456789101",
-      "type": "transfer-in",
-      "amount": 1000,
-      "balanceAfter": 3000,
-      "timestamp": "2025-07-24T10:40:05.468Z",
-      "status": "success",
-      "from": "123456789012"
-    },
-    {
-      "id": "TXN17533537475613374",
-      "accountNumber": "123456789012",
-      "type": "withdraw",
-      "amount": 1900,
-      "balanceAfter": 898100,
-      "timestamp": "2025-07-24T10:42:27.561Z",
-      "status": "success",
-      "breakdown": {
-        "100": 4,
-        "500": 1,
-        "1000": 1
-      }
     }
   ]
 }
