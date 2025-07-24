@@ -162,7 +162,7 @@ app.get('/balance/:accountNumber',  (req, res) => {
 
 
 
-app.post('/deposit',  (req, res) => {
+app.post('/deposit', async (req, res) => {
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
   const MAX_DEPOSIT = 50000;
@@ -182,12 +182,35 @@ app.post('/deposit',  (req, res) => {
 
   user.balance += amount;
   res.json({ balance: user.balance, message: 'Deposit successful' });
+
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber,
+    type: 'deposit',
+    amount,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    breakdown
+  };
+
+  await db.read();
+  db.data.transactions.push(txn);
+  await db.write();
+
+  // transactions.push(txn);
+
+  res.json({
+    balance: user.balance,
+    message: 'Deposit successful',
+    breakdown,
+    transactionId: txn.id
+  });
 });
 
 
 
 
-// Save transaction on withdrawal
 app.post('/withdraw',async (req, res) => {
   const maxWithdraw = 200000;
   const { accountNumber, amount } = req.body;
@@ -290,7 +313,7 @@ app.post('/changepin',  (req, res) => {
 
 
 
-app.post('/transfer',  (req, res) => {
+app.post('/transfer', async (req, res) => {
   const { from, to, amount } = req.body;
   if (from === to) return res.status(400).json({ message: 'Cannot transfer to the same account' });
 
@@ -308,6 +331,31 @@ app.post('/transfer',  (req, res) => {
   transactions.push(tx, rx);
 
   res.json({ message: 'Transfer successful', senderBalance: sender.balance });
+
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    from,
+    to,
+    type: 'transfer',
+    amount,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    breakdown
+  };
+
+  await db.read();
+  db.data.transactions.push(txn);
+  await db.write();
+
+  // transactions.push(txn);
+
+  res.json({
+    balance: user.balance,
+    message: 'Transfer successful',
+    breakdown,
+    transactionId: txn.id
+  });
 });
 
 app.post('/verify-mobile',  (req, res) => {
@@ -410,6 +458,8 @@ app.post('/transfer-same-bank', (req, res) => {
     senderNewBalance: sender.balance,
     bank: 'Same Bank',
   });
+
+  
 });
 
 
