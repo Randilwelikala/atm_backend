@@ -289,6 +289,11 @@ app.post('/withdraw',async (req, res) => {
   }
 
   user.balance -= amount;
+  return res.json({
+    message: 'Withdraw successful',
+    balance: user.balance,
+    breakdown,
+  });
 
   
 });
@@ -495,9 +500,11 @@ app.post('/verify-otp', (req, res) => {
   if (!user) {
     return res.status(404).json({ message: 'User not found for this mobile' });
   }
+  const token = jwt.sign({ accountNumber: user.accountNumber }, SECRET_KEY, { expiresIn: '1h' });
+
   
   
-  res.json({ message: 'OTP verified successfully', accountNumber: user.accountNumber });
+  res.json({ message: 'OTP verified successfully', accountNumber: user.accountNumber,token: token });
 });
 
 
