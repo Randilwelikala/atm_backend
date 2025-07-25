@@ -187,7 +187,20 @@ app.post('/cardLogin', (req, res) => {
   if (cardNumber.toString().length !== 16) {
     return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
   }
-  return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
+  
+
+  const generatedToken = jwt.sign(
+    { cardNumber: user.cardNumber, accountNumber: user.accountNumber },
+    'your_secret_key', // Replace with process.env.JWT_SECRET in real apps
+    { expiresIn: '1h' }
+  );
+
+  return res.json({
+    success: true,
+    balance: user.balance,
+    accountNumber: user.accountNumber,
+    token: generatedToken
+  });
 });
 
 
