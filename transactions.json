@@ -70,6 +70,26 @@
       "timestamp": "2025-07-25T07:19:35.640Z",
       "status": "success",
       "breakdown": {}
+    },
+    {
+      "id": "TXN17534316836402865",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 10000,
+      "balanceAfter": 910000,
+      "timestamp": "2025-07-25T08:21:23.640Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN17534319042576584",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 1000,
+      "balanceAfter": 901000,
+      "timestamp": "2025-07-25T08:25:04.257Z",
+      "status": "success",
+      "breakdown": {}
     }
   ]
 }

@@ -449,7 +449,7 @@ app.post('/verify-mobile',  (req, res) => {
 const otpStore = {};
 
 
-app.post('/send-otp',authenticateToken, (req, res) => {
+app.post('/send-otp', (req, res) => {
   const { mobile } = req.body;
   if (!mobile || !/^07\d{8}$/.test(mobile)) {
     return res.status(400).json({ message: 'Invalid mobile number format' });
@@ -472,7 +472,7 @@ app.post('/send-otp',authenticateToken, (req, res) => {
 
 
 
-app.post('/verify-otp',authenticateToken, (req, res) => {
+app.post('/verify-otp', (req, res) => {
   const { mobile, otp } = req.body;
   if (!mobile || !otp) {
     return res.status(400).json({ message: 'Mobile and OTP are required' });
