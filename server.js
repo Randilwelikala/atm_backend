@@ -193,7 +193,7 @@ app.post('/cardLogin', (req, res) => {
 
 
 
-app.get('/balance/:accountNumber',  (req, res) => {
+app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
   if (user) {
     res.json({ balance: user.balance });
@@ -253,7 +253,7 @@ app.post('/deposit',authenticateToken, async (req, res) => {
 
 
 
-app.post('/withdraw',async (req, res) => {
+app.post('/withdraw',authenticateToken,async (req, res) => {
   const maxWithdraw = 200000;
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
@@ -298,7 +298,7 @@ app.post('/withdraw',async (req, res) => {
   
 });
 
-app.get('/transactions/:accountNumber', async (req, res) => {
+app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
   const { accountNumber } = req.params;
   await db.read();
 
@@ -369,7 +369,7 @@ app.get('/user/:accountNumber', authenticateToken, (req, res) => {
 
 
 
-app.post('/changepin',  (req, res) => {
+app.post('/changepin',authenticateToken,  (req, res) => {
   const { accountNumber, oldPin, newPin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === oldPin);
 
@@ -384,7 +384,7 @@ app.post('/changepin',  (req, res) => {
 
 
 
-app.post('/transfer', async (req, res) => {
+app.post('/transfer',authenticateToken, async (req, res) => {
   const { from, to, amount } = req.body;
   if (from === to) return res.status(400).json({ message: 'Cannot transfer to the same account' });
 
@@ -449,7 +449,7 @@ app.post('/verify-mobile',  (req, res) => {
 const otpStore = {};
 
 
-app.post('/send-otp', (req, res) => {
+app.post('/send-otp',authenticateToken, (req, res) => {
   const { mobile } = req.body;
   if (!mobile || !/^07\d{8}$/.test(mobile)) {
     return res.status(400).json({ message: 'Invalid mobile number format' });
@@ -472,7 +472,7 @@ app.post('/send-otp', (req, res) => {
 
 
 
-app.post('/verify-otp', (req, res) => {
+app.post('/verify-otp',authenticateToken, (req, res) => {
   const { mobile, otp } = req.body;
   if (!mobile || !otp) {
     return res.status(400).json({ message: 'Mobile and OTP are required' });
@@ -511,7 +511,7 @@ app.post('/verify-otp', (req, res) => {
 
 
 
-app.post('/transfer-same-bank', async (req, res) => {
+app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
   const { from, to, amount } = req.body;
 
   const sender = users.find(u => u.accountNumber === from);
@@ -572,7 +572,7 @@ app.post('/transfer-same-bank', async (req, res) => {
 
 
 
-app.post('/transfer-other-bank', async (req, res) => {
+app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
   const { from, to, amount } = req.body;
 
   const sender = users.find(u => u.accountNumber === from);
