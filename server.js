@@ -5,6 +5,7 @@ const cors = require('cors');
 const session = require('express-session');
 const app = express();
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
 app.use(express.json());
 app.use(session({
@@ -20,6 +21,8 @@ app.use(cors({
   origin: 'http://localhost:3000', 
   credentials: true               
 }));
+
+const SECRET_KEY = 'your_secret_key';
 
 const atmCash = {
     5000: 10,
@@ -82,6 +85,22 @@ const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, { transactions: [] });
 
 
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token missing' });
+  }
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Token invalid' });
+    req.user = user; // user here is the decoded payload
+    next();
+  });
+}
+
 async function initDB() {
   await db.read();
   if (!db.data) {
@@ -107,12 +126,41 @@ const transactions = [];
 
 
 
+app.post('/auth', (req, res) => {
+  const { accountNumber } = req.body;
+
+  const user = users.find(u => u.accountNumber === accountNumber);
+
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid account number' });
+  }
+
+  
+  const payload = {
+    accountNumber: user.accountNumber,
+    name: user.name,
+  };
+
+  const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+
+  res.json({ token });
+});
+
+app.listen(3001, () => {
+  console.log('Server started on port 3001');
+});
+
+
+
 
 app.post('/login', (req, res) => {
   const { accountNumber, pin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
   if (user) {    
-    res.json({ success: true, balance: user.balance });    
+    
+     const token = jwt.sign({ id: user.id, accountNumber }, SECRET_KEY, { expiresIn: '1h' }); 
+     res.json({ success: true, balance: user.balance,token }); 
+     return res.json({ token });  
   } else {
     res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
   }
@@ -157,7 +205,7 @@ app.get('/balance/:accountNumber',  (req, res) => {
 
 
 
-app.post('/deposit', async (req, res) => {
+app.post('/deposit',authenticateToken, async (req, res) => {
   const { accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
   const MAX_DEPOSIT = 50000;
@@ -176,7 +224,7 @@ app.post('/deposit', async (req, res) => {
   }
 
   user.balance += amount;
-  res.json({ balance: user.balance, message: 'Deposit successful' });
+  // res.json({ balance: user.balance, message: 'Deposit successful' });
 
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
@@ -197,7 +245,7 @@ app.post('/deposit', async (req, res) => {
   res.json({
     balance: user.balance,
     message: 'Deposit successful',
-    breakdown,
+    breakdown: {},
     transactionId: txn.id
   });
 });
@@ -288,8 +336,24 @@ app.get('/transactions/:accountNumber', async (req, res) => {
 
 
 
-app.get('/user/:accountNumber',  (req, res) => {
-  const user = users.find(u => u.accountNumber === req.params.accountNumber);
+// app.get('/user/:accountNumber',  (req, res) => {
+//   const user = users.find(u => u.accountNumber === req.params.accountNumber);
+//   if (user) {
+//     res.json(user);
+//   } else {
+//     res.status(404).json({ message: 'User not found' });
+//   }
+// });
+app.get('/user/:accountNumber', authenticateToken, (req, res) => {
+  const accountNumber = req.params.accountNumber;
+
+  // Optional: You can verify that req.user.accountNumber matches requested accountNumber,
+  // if you want to restrict users from accessing other users' info.
+  if (req.user.accountNumber !== accountNumber) {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+
+  const user = users.find(u => u.accountNumber === accountNumber);
   if (user) {
     res.json(user);
   } else {
