@@ -4,11 +4,9 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const app = express();
-const path = require('path');       
-     
-
-
-
+const path = require('path');
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = 'Can_Not_Log_To_The_System';
 
 
 app.use(express.json());
@@ -96,6 +94,20 @@ async function initDB() {
 }
 
 
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, SECRET_KEY, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
+
+
 function createTransaction(accountNumber, type, amount) {
   return { 
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
@@ -117,6 +129,7 @@ app.post('/login', (req, res) => {
   const { accountNumber, pin } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
   if (user) {    
+    const token = jwt.sign({ accountNumber: user.accountNumber }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ success: true, balance: user.balance });    
   } else {
     res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
@@ -145,12 +158,13 @@ app.post('/cardLogin', (req, res) => {
     return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
   }
   return res.json({ success: true, balance: user.balance, accountNumber: user.accountNumber });
+  const token = jwt.sign({ accountNumber: user.cardNumber }, SECRET_KEY, { expiresIn: '1h' });
 });
 
 
 
 
-app.get('/balance/:accountNumber',  (req, res) => {
+app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
   if (user) {
     res.json({ balance: user.balance });
@@ -286,6 +300,23 @@ app.get('/transactions/:accountNumber', async (req, res) => {
   res.json(formatted);
 });
 
+//token
+app.post('/api/verifyAccount', (req, res) => {
+  const { accountNumber } = req.body;
+
+   console.log('Verify accountNumber:', req.body.accountNumber);
+  if (!accountNumber) {
+    return res.status(400).json({ success: false, message: 'Account number is required' });
+  }
+
+  const user = users.find(u => u.accountNumber === accountNumber);
+
+  if (user) {
+    return res.json({ success: true, message: 'Account number exists' });
+  } else {
+    return res.status(404).json({ success: false, message: 'Account number not found' });
+  }
+});
 
 
 
