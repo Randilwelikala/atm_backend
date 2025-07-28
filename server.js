@@ -266,22 +266,28 @@ app.post('/deposit',authenticateToken, async (req, res) => {
 
 
 
-app.post('/withdraw',authenticateToken,async (req, res) => {
+app.post('/withdraw', authenticateToken, async (req, res) => {
   const maxWithdraw = 200000;
-  const { accountNumber, amount } = req.body;
-  const user = users.find(u => u.accountNumber === accountNumber);
+  const { accountNumber, amount, denominations: selectedDenominations } = req.body;
 
+  const user = users.find(u => u.accountNumber === accountNumber);
   if (!user) return res.status(404).json({ message: 'User not found' });
   if (user.balance < amount) return res.status(400).json({ message: 'Insufficient balance' });
-  if (amount <= 100) return res.status(400).json({ message: 'Amount must be greater than zero' });
+  if (amount <= 100) return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
   if (amount > maxWithdraw) return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
+  if (!selectedDenominations || selectedDenominations.length === 0) {
+    return res.status(400).json({ message: 'Please select at least one denomination' });
+  }
 
-  const denominations = [5000, 2000, 1000, 500, 100, 50];
   let remaining = amount;
   const breakdown = {};
   const tempATM = { ...atmCash };
 
-  for (let note of denominations) {
+  // Sort denominations descending
+  const sortedSelected = selectedDenominations.sort((a, b) => b - a);
+
+  for (let note of sortedSelected) {
+    note = parseInt(note);
     const needed = Math.floor(remaining / note);
     const available = tempATM[note];
 
@@ -294,7 +300,7 @@ app.post('/withdraw',authenticateToken,async (req, res) => {
   }
 
   if (remaining > 0) {
-    return res.status(400).json({ message: 'ATM does not have enough notes to fulfill this request' });
+    return res.status(400).json({ message: 'ATM does not have enough selected notes to fulfill this request' });
   }
 
   for (let note in breakdown) {
@@ -302,14 +308,14 @@ app.post('/withdraw',authenticateToken,async (req, res) => {
   }
 
   user.balance -= amount;
+
   return res.json({
     message: 'Withdraw successful',
     balance: user.balance,
     breakdown,
   });
-
-  
 });
+
 
 app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
   const { accountNumber } = req.params;
