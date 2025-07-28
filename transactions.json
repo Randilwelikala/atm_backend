@@ -120,6 +120,46 @@
       "timestamp": "2025-07-25T10:53:25.078Z",
       "status": "success",
       "from": "123456789012"
+    },
+    {
+      "id": "TXN17536735216486348",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 1000,
+      "balanceAfter": 898000,
+      "timestamp": "2025-07-28T03:32:01.650Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN17536739156652366",
+      "accountNumber": "123456789012",
+      "type": "deposit",
+      "amount": 1200,
+      "balanceAfter": 899200,
+      "timestamp": "2025-07-28T03:38:35.665Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN17536741264936779",
+      "accountNumber": "123456789012",
+      "type": "transfer-out",
+      "amount": 5500,
+      "balanceAfter": 881700,
+      "timestamp": "2025-07-28T03:42:06.493Z",
+      "status": "success",
+      "to": "123456789101"
+    },
+    {
+      "id": "TXN17536741264932319",
+      "accountNumber": "123456789101",
+      "type": "transfer-in",
+      "amount": 5500,
+      "balanceAfter": 7500,
+      "timestamp": "2025-07-28T03:42:06.493Z",
+      "status": "success",
+      "from": "123456789012"
     }
   ]
 }
