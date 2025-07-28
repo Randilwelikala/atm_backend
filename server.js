@@ -191,7 +191,7 @@ app.post('/cardLogin', (req, res) => {
 
   const generatedToken = jwt.sign(
     { cardNumber: user.cardNumber, accountNumber: user.accountNumber },
-    'your_secret_key', // Replace with process.env.JWT_SECRET in real apps
+    'your_secret_key', 
     { expiresIn: '1h' }
   );
 
@@ -237,8 +237,7 @@ app.post('/deposit',authenticateToken, async (req, res) => {
   }
 
   user.balance += amount;
-  // res.json({ balance: user.balance, message: 'Deposit successful' });
-
+ 
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber,
@@ -283,7 +282,7 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
   const breakdown = {};
   const tempATM = { ...atmCash };
 
-  // Sort denominations descending
+ 
   const sortedSelected = selectedDenominations.sort((a, b) => b - a);
 
   for (let note of sortedSelected) {
@@ -346,7 +345,7 @@ app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
         displayAmount: (isDeposit ? '+' : '-') + t.amount
       };
     } else {
-      return t; // fallback
+      return t; 
     }
   });
 
@@ -354,25 +353,8 @@ app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
 });
 
 
-
-
-
-
-
-
-// app.get('/user/:accountNumber',  (req, res) => {
-//   const user = users.find(u => u.accountNumber === req.params.accountNumber);
-//   if (user) {
-//     res.json(user);
-//   } else {
-//     res.status(404).json({ message: 'User not found' });
-//   }
-// });
 app.get('/user/:accountNumber', authenticateToken, (req, res) => {
   const accountNumber = req.params.accountNumber;
-
-  // Optional: You can verify that req.user.accountNumber matches requested accountNumber,
-  // if you want to restrict users from accessing other users' info.
   if (req.user.accountNumber !== accountNumber) {
     return res.status(403).json({ message: 'Access denied' });
   }
@@ -418,7 +400,7 @@ app.post('/transfer',authenticateToken, async (req, res) => {
 
   const timestamp = new Date().toISOString();
 
-  // Prepare transactions
+ 
   const senderTxn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber: from,
