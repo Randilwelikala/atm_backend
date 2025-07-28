@@ -400,7 +400,7 @@ app.post('/transfer',authenticateToken, async (req, res) => {
 
   const timestamp = new Date().toISOString();
 
- 
+  // Prepare transactions
   const senderTxn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber: from,
@@ -565,7 +565,16 @@ app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
     message: 'Transfer successful',
     senderBalance: sender.balance,
     recipientBalance: recipient.balance,
-    transactions: [senderTxn, receiverTxn]
+    transactions: [senderTxn, receiverTxn],
+    rom,
+  to,
+  transferred: amount,
+  bank: 'Same Bank',
+  senderNewBalance: sender.balance,
+  senderName: sender.name,
+  recipientName: recipient.name,
+  transactionId,
+  timestamp
   });
 });
 
