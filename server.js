@@ -24,6 +24,12 @@ app.use(cors({
 
 const SECRET_KEY = 'your_secret_key';
 
+const exchangeRates = {
+  USD: 350,
+  EUR: 370,
+  GBP: 430,
+};
+
 const atmCash = {
     5000: 10,
     2000: 20,
@@ -61,8 +67,7 @@ const users = [
     accountType: 'premium', 
     branch: 'Colombo', 
     accountNumber: '987654321098', 
-    pin: '5678', 
-    pin: '8765', 
+    pin: '5678',     
     balance: 5000, 
     cardNumber: '4567456745674567', 
     mobile: '0759876543' 
@@ -96,7 +101,7 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, SECRET_KEY, (err, user) => {
     if (err) return res.status(403).json({ message: 'Token invalid' });
-    req.user = user; // user here is the decoded payload
+    req.user = user; 
     next();
   });
 }
@@ -654,69 +659,54 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
 });
 
 
-app.post('/foreign-transfer', authenticateToken, async (req, res) => {
-  const { from, to, amount, currency, swiftCode } = req.body;
+app.post('/foreign-transfer', async (req, res) => {
+  const { fromAccount, toAccount, amount, currency,branch } = req.body;
 
-  if (!from || !to || !amount || !currency || !swiftCode) {
+  if (!fromAccount || !toAccount || !amount || !currency) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
-  if (from === to) {
-    return res.status(400).json({ message: 'Cannot transfer to the same account' });
-  }
-  if (amount <= 0) {
-    return res.status(400).json({ message: 'Amount must be greater than zero' });
-  }
-  
-  const sender = users.find(u => u.accountNumber === from);
-  if (!sender) return res.status(404).json({ message: 'Sender account not found' });
 
-  const validSwiftCodes = ['BKCHUS33', 'DEUTDEFF', 'HABALALA']; 
-  if (!validSwiftCodes.includes(swiftCode)) {
-    return res.status(400).json({ message: 'Invalid beneficiary bank SWIFT code' });
-  }
+  const sender = users.find(u => u.accountNumber === fromAccount);
+  const receiver = users.find(u => u.accountNumber === toAccount);
+  const rbank = receiver.bankName;
+  const sbank = sender.bankName;
 
-  if (sender.balance < amount) {
-    return res.status(400).json({ message: 'Insufficient funds' });
-  }
 
-  const exchangeRates = {
-    USD: 350, 
-    EUR: 370,
-    GBP: 430,
-  };
+  if (!sender) return res.status(404).json({ message: 'Sender not found' });
+  if (!receiver) return res.status(404).json({ message: 'Receiver not found' });
+  if (!exchangeRates[currency]) return res.status(400).json({ message: 'Unsupported currency' });
+  if (sender.balance < amount * exchangeRates[currency]) return res.status(400).json({ message: 'Insufficient balance' });
 
-  const rate = exchangeRates[currency.toUpperCase()];
-  if (!rate) {
-    return res.status(400).json({ message: 'Unsupported currency' });
-  }
+  const requiredLKR = amount * exchangeRates[currency];
 
-  const localAmount = amount * rate;
+  sender.balance -= requiredLKR;
 
-  sender.balance -= localAmount;
- 
-  await db.read();
-  const txn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber: from,
-    type: 'foreign-transfer-out',
-    amount: localAmount,
+  const transaction = {
+    id: `TXN${Date.now()}`,
+    branch,
+    fromAccount,
+    toAccount,
+    amount,
+    rbank,
+    sbank,
     currency,
-    rate,
-    balanceAfter: sender.balance,
+    requiredLKR,
     timestamp: new Date().toISOString(),
-    status: 'success',
-    to,
-    swiftCode,
+    status: 'Success',
   };
-  db.data.transactions.push(txn);
+
+  await db.read();
+  db.data.transactions.push(transaction);
   await db.write();
 
-  return res.json({
-    message: `Foreign transfer successful. Amount debited: LKR ${localAmount.toFixed(2)}`,
-    balance: sender.balance,
-    transaction: txn,
+  res.json({
+    transaction,
+    sender,
+    receiver,
   });
 });
+
+
 
 
 
