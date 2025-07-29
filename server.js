@@ -522,7 +522,7 @@ app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
   if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
 
   if (sender.bankName !== recipient.bankName) {
-    return res.status(400).json({ error: 'Accounts belong to different banks. Use the other bank transfer API.' });
+    return res.status(400).json({ error: 'You can do this transaction by using Other Bank Transfer Section' });
   }
 
   if (sender.balance < amount) {
@@ -562,20 +562,23 @@ app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
   await db.write();
 
   res.json({
-    message: 'Transfer successful',
-    senderBalance: sender.balance,
-    recipientBalance: recipient.balance,
-    transactions: [senderTxn, receiverTxn],
-    rom,
+  message: 'Transfer successful',
+  senderBalance: sender.balance,
+  recipientBalance: recipient.balance,
+  transactions: [senderTxn, receiverTxn],
+  from,
   to,
   transferred: amount,
   bank: 'Same Bank',
   senderNewBalance: sender.balance,
   senderName: sender.name,
   recipientName: recipient.name,
-  transactionId,
-  timestamp
-  });
+  transactionId: senderTxn.id, 
+  timestamp,
+  senderBankName: sender.bankName,
+  recipientBankName: recipient.bankName,
+});
+
 });
 
 
@@ -632,11 +635,22 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
   await db.write();
 
   res.json({
-    message: 'Transfer successful',
-    senderBalance: sender.balance,
-    recipientBalance: recipient.balance,
-    transactions: [senderTxn, receiverTxn]
-  });
+  message: 'Transfer successful',
+  senderBalance: sender.balance,
+  recipientBalance: recipient.balance,
+  transactions: [senderTxn, receiverTxn],
+  from,
+  to,
+  transferred: amount,
+  bank: 'Other Bank',
+  senderNewBalance: sender.balance,
+  senderName: sender.name,
+  recipientName: recipient.name,
+  transactionId: senderTxn.id, 
+  timestamp,
+  senderBankName: sender.bankName,
+  recipientBankName: recipient.bankName,
+});
 });
 
 
