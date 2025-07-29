@@ -654,12 +654,132 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
 });
 
 
+app.post('/foreign-transfer', authenticateToken, async (req, res) => {
+  const { from, to, amount, currency, swiftCode } = req.body;
+
+  if (!from || !to || !amount || !currency || !swiftCode) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+  if (from === to) {
+    return res.status(400).json({ message: 'Cannot transfer to the same account' });
+  }
+  if (amount <= 0) {
+    return res.status(400).json({ message: 'Amount must be greater than zero' });
+  }
+  
+  const sender = users.find(u => u.accountNumber === from);
+  if (!sender) return res.status(404).json({ message: 'Sender account not found' });
+
+  const validSwiftCodes = ['BKCHUS33', 'DEUTDEFF', 'HABALALA']; 
+  if (!validSwiftCodes.includes(swiftCode)) {
+    return res.status(400).json({ message: 'Invalid beneficiary bank SWIFT code' });
+  }
+
+  if (sender.balance < amount) {
+    return res.status(400).json({ message: 'Insufficient funds' });
+  }
+
+  const exchangeRates = {
+    USD: 350, 
+    EUR: 370,
+    GBP: 430,
+  };
+
+  const rate = exchangeRates[currency.toUpperCase()];
+  if (!rate) {
+    return res.status(400).json({ message: 'Unsupported currency' });
+  }
+
+  const localAmount = amount * rate;
+
+  sender.balance -= localAmount;
+ 
+  await db.read();
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber: from,
+    type: 'foreign-transfer-out',
+    amount: localAmount,
+    currency,
+    rate,
+    balanceAfter: sender.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+    to,
+    swiftCode,
+  };
+  db.data.transactions.push(txn);
+  await db.write();
+
+  return res.json({
+    message: `Foreign transfer successful. Amount debited: LKR ${localAmount.toFixed(2)}`,
+    balance: sender.balance,
+    transaction: txn,
+  });
+});
+
+
+
+
+app.post('/foreign-deposit', authenticateToken, async (req, res) => {
+  const { accountNumber, amount, currency } = req.body;
+
+  if (!accountNumber || !amount || !currency) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+  if (amount <= 0) {
+    return res.status(400).json({ message: 'Amount must be greater than zero' });
+  }
+
+  const user = users.find(u => u.accountNumber === accountNumber);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+
+  const exchangeRates = {
+    USD: 350,  
+    EUR: 370,
+    GBP: 430,
+  };
+
+  const rate = exchangeRates[currency.toUpperCase()];
+  if (!rate) {
+    return res.status(400).json({ message: 'Unsupported currency' });
+  }
+
+  const localAmount = amount * rate;
+
+  user.balance += localAmount;
+
+  await db.read();
+  const txn = {
+    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    accountNumber,
+    type: 'foreign-deposit',
+    amount: localAmount,
+    currency,
+    rate,
+    balanceAfter: user.balance,
+    timestamp: new Date().toISOString(),
+    status: 'success',
+  };
+  db.data.transactions.push(txn);
+  await db.write();
+
+  return res.json({
+    message: `Foreign currency deposit successful. Credited LKR ${localAmount.toFixed(2)}`,
+    balance: user.balance,
+    transaction: txn,
+  });
+});
+
+
+
 
 async function startServer() {
   await initDB();
 
   const PORT = 3001;
-  app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
 }
 
 startServer();
