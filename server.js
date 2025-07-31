@@ -492,9 +492,9 @@ app.post('/send-otp', (req, res) => {
     expiresAt: Date.now() + 5 * 60 * 1000
   };
 
-  // Send email
+  
   const mailOptions = {
-    from: 'your-email@gmail.com',     // <-- same as auth.user
+    from: 'rangran425@gmail.com',    
     to: email,
     subject: 'Your OTP Code',
     text: `Your OTP is ${otp}. It will expire in 5 minutes.`
@@ -505,8 +505,8 @@ app.post('/send-otp', (req, res) => {
       console.error('Error sending email:', error);
       return res.status(500).json({ message: 'Failed to send OTP email' });
     }
-    console.log(`Sending OTP ${otp} to email ${mobile}`); 
-    res.json({ message: 'OTP sent successfully to email' });
+    console.log(`Sending OTP ${otp} to email ${email}`); 
+    res.json({ message: 'OTP sent successfully to email',otp });
    
   });
 });
@@ -541,9 +541,9 @@ app.post('/verify-otp', (req, res) => {
     return res.status(404).json({ message: 'User not found for this email' });
   }
 
-  const token = jwt.sign({ email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+  const token = jwt.sign({ accountNumber: user.accountNumber }, SECRET_KEY, { expiresIn: '1h' });
 
-  res.json({ message: 'OTP verified successfully', email: user.email, token });
+  res.json({ message: 'OTP verified successfully', email: user.email, token,accountNumber: user.accountNumber });
 });
 
 
