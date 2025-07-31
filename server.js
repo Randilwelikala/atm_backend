@@ -773,7 +773,7 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
 
 
 app.post('/foreign-transfer', async (req, res) => {
-  const { fromAccount, toAccount, amount, currency,branch } = req.body;
+  const { fromAccount, toAccount, amount, currency, branch, email } = req.body;
 
   if (!fromAccount || !toAccount || !amount || !currency) {
     return res.status(400).json({ message: 'Missing required fields' });
@@ -781,16 +781,16 @@ app.post('/foreign-transfer', async (req, res) => {
 
   const sender = users.find(u => u.accountNumber === fromAccount);
   const receiver = users.find(u => u.accountNumber === toAccount);
-  const rbank = receiver.bankName;
-  const sbank = sender.bankName;
-
 
   if (!sender) return res.status(404).json({ message: 'Sender not found' });
   if (!receiver) return res.status(404).json({ message: 'Receiver not found' });
   if (!exchangeRates[currency]) return res.status(400).json({ message: 'Unsupported currency' });
-  if (sender.balance < amount * exchangeRates[currency]) return res.status(400).json({ message: 'Insufficient balance' });
+
+  const rbank = receiver.bankName;
+  const sbank = sender.bankName;
 
   const requiredLKR = amount * exchangeRates[currency];
+  if (sender.balance < requiredLKR) return res.status(400).json({ message: 'Insufficient balance' });
 
   sender.balance -= requiredLKR;
 
@@ -812,13 +812,45 @@ app.post('/foreign-transfer', async (req, res) => {
   db.data.transactions.push(transaction);
   await db.write();
 
+  // Prepare email
+  const subject = 'Foreign Transfer Receipt - YourBankName';
+  const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
+
+  const message = `
+Dear Customer,
+
+This is a confirmation of your recent foreign transfer.
+
+Transaction Details:
+---------------------
+Date & Time     : ${now}
+From Account    : ${fromAccount} (${sbank})
+To Account      : ${toAccount} (${rbank})
+Transferred Amount: ${amount} ${currency} (Equivalent to Rs.${requiredLKR.toFixed(2)})
+
+Remaining Balance: Rs.${sender.balance.toFixed(2)}
+
+Thank you for banking with us.
+YourBankName
+  `.trim();
+
+  const userEmail = email || sender.email;
+  if (!userEmail) {
+    console.warn('No email provided or found, skipping email sending.');
+  } else {
+    try {
+      await sendEmailReceipt(userEmail, subject, message);
+    } catch (emailError) {
+      console.error('Failed to send foreign transfer email:', emailError);
+    }
+  }
+
   res.json({
     transaction,
     sender,
     receiver,
   });
 });
-
 
 
 
