@@ -6,7 +6,6 @@ const session = require('express-session');
 const app = express();
 const path = require('path');
 const jwt = require('jsonwebtoken');
-// const nodemailer = require('nodemailer');
 const { sendEmailReceipt } = require('./emailService');
 
 
@@ -236,53 +235,80 @@ app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
 
 
 
-app.post('/deposit',authenticateToken, async (req, res) => {
-  const { email,accountNumber, amount } = req.body;
-  const user = users.find(u => u.accountNumber === accountNumber);
+app.post('/deposit', authenticateToken, async (req, res) => {
+  const { email, accountNumber, amount } = req.body;
   const MAX_DEPOSIT = 50000;
 
-  if (amount === undefined || amount === null) {
-    return res.status(400).json({ message: 'Amount is required' });
-  }
-  if (amount < 100) {
-    return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
-  }
-  if (amount > MAX_DEPOSIT) {
-    return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
-  }
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
+  try {
+    if (!accountNumber) return res.status(400).json({ message: 'Account number is required' });
+    if (amount === undefined || amount === null || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+    if (amount < 100) return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
+    if (amount > MAX_DEPOSIT) return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
 
-  user.balance += amount;
-  const subject = 'Deposit Receipt';
-  const message = `You have successfully deposited Rs.${amount} to account ${accountNumber}.`;
-  await sendEmailReceipt(email, subject, message);
+    const user = users.find(u => u.accountNumber === accountNumber);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-  const txn = {
-    id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
-    accountNumber,
-    type: 'deposit',
-    amount,
-    balanceAfter: user.balance,
-    timestamp: new Date().toISOString(),
-    status: 'success',
-    breakdown: {}
-  };
+    user.balance += amount;
 
-  await db.read();
-  db.data.transactions.push(txn);
-  await db.write();
- 
+    const subject = 'Deposit Receipt - YourBankName';
+    const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
 
-  res.json({
-    balance: user.balance,
-    message: 'Deposit successful',
-    breakdown: {},
-    transactionId: txn.id
-  });
+    const message = `
+      Dear Customer,
+
+      This is a confirmation of your recent deposit.
+
+      Transaction Details:
+      ---------------------
+      Date & Time     : ${now}
+      Account Number  : ${accountNumber}
+      Deposited Amount: Rs.${amount}.00
+
+      New Balance    : Rs.${user.balance}.00
+
+      Thank you for banking with us.
+      YourBankName
+    `.trim();
+
+    const userEmail = email || user.email;
+    if (!userEmail) {
+      console.warn('No email provided or found, skipping email sending.');
+    } else {
+      try {
+        await sendEmailReceipt(userEmail, subject, message);
+      } catch (emailError) {
+        console.error('Failed to send deposit email:', emailError);
+      }
+    }
+
+    const txn = {
+      id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+      accountNumber,
+      type: 'deposit',
+      amount,
+      balanceAfter: user.balance,
+      timestamp: new Date().toISOString(),
+      status: 'success',
+      breakdown: {}
+    };
+
+    await db.read();
+    db.data.transactions.push(txn);
+    await db.write();
+
+    res.json({
+      balance: user.balance,
+      message: 'Deposit successful',
+      breakdown: {},
+      transactionId: txn.id
+    });
+  } catch (error) {
+    console.error('Error during deposit:', error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
 });
-
 
 
 
@@ -325,13 +351,11 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
     if (remaining > 0) {
       return res.status(400).json({ message: 'ATM does not have enough selected notes to fulfill this request' });
     }
-
-    // Update ATM cash after successful calculation
+    
     for (let note in breakdown) {
       atmCash[note] -= breakdown[note];
     }
-
-    // Deduct user balance
+    
     user.balance -= amount;
 
     const subject = 'ATM Withdrawal Receipt - YourBankName';
@@ -342,25 +366,25 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
       .join('\n');
 
     const message = `
-Dear Customer,
+      Dear Customer,
 
-This is a confirmation of your recent ATM withdrawal.
+      This is a confirmation of your recent ATM withdrawal.
 
-Transaction Details:
----------------------
-Date & Time     : ${now}
-Account Number  : ${accountNumber}
-Withdrawn Amount: Rs.${amount}.00
-Note Breakdown  :
-${breakdownText}
+      Transaction Details:
+      ---------------------
+      Date & Time     : ${now}
+      Account Number  : ${accountNumber}
+      Withdrawn Amount: Rs.${amount}.00
+      Note Breakdown  :
+      ${breakdownText}
 
-Remaining Balance: Rs.${user.balance}.00
+      Remaining Balance: Rs.${user.balance}.00
 
-Thank you for banking with us.
-YourBankName
-`.trim();
+      Thank you for banking with us.
+      YourBankName
+      `.trim();
 
-    // Send email receipt (use user email if email not provided)
+   
     const userEmail = email || user.email;
     if (!userEmail) {
       console.warn('No email provided or found, skipping email sending.');
@@ -368,8 +392,7 @@ YourBankName
       try {
         await sendEmailReceipt(userEmail, subject, message);
       } catch (emailError) {
-        console.error('Failed to send withdrawal email:', emailError);
-        // Do not fail the withdrawal for email issues
+        console.error('Failed to send withdrawal email:', emailError);       
       }
     }
 
@@ -470,7 +493,7 @@ app.post('/transfer',authenticateToken, async (req, res) => {
 
   const timestamp = new Date().toISOString();
 
-  // Prepare transactions
+ 
   const senderTxn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber: from,
