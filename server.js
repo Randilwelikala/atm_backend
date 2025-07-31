@@ -463,8 +463,8 @@ app.get('/user/:accountNumber', authenticateToken, (req, res) => {
 
 
 
-app.post('/changepin',authenticateToken,  (req, res) => {
-  const { accountNumber, oldPin, newPin } = req.body;
+app.post('/changepin', authenticateToken, async (req, res) => {
+  const { accountNumber, oldPin, newPin,} = req.body;
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === oldPin);
 
   if (!user) return res.status(400).json({ message: 'Invalid account number or old PIN' });
@@ -472,8 +472,24 @@ app.post('/changepin',authenticateToken,  (req, res) => {
   if (!/^\d{4}$/.test(newPin)) return res.status(400).json({ message: 'New PIN must be exactly 4 digits' });
 
   user.pin = newPin;
-  res.json({ message: 'PIN changed successfull' });
+
+ 
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: 'ATM PIN Changed',
+    text: `Dear Customer,\n\nYour ATM PIN was successfully changed for account ${user.accountNumber}.\n\nIf you did not perform this action, please contact support immediately.\n\nThank you.`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.json({ message: 'PIN changed successfully and email sent' });
+  } catch (error) {
+    console.error('Email error:', error);
+    res.status(500).json({ message: 'PIN changed but email failed to send' });
+  }
 });
+
 
 
 
