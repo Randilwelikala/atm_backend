@@ -6,7 +6,10 @@ const session = require('express-session');
 const app = express();
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
+const { sendEmailReceipt } = require('./emailService');
+
+
 
 
 app.use(express.json());
@@ -234,7 +237,7 @@ app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
 
 
 app.post('/deposit',authenticateToken, async (req, res) => {
-  const { accountNumber, amount } = req.body;
+  const { email,accountNumber, amount } = req.body;
   const user = users.find(u => u.accountNumber === accountNumber);
   const MAX_DEPOSIT = 50000;
 
@@ -252,7 +255,10 @@ app.post('/deposit',authenticateToken, async (req, res) => {
   }
 
   user.balance += amount;
- 
+  const subject = 'Deposit Receipt';
+  const message = `You have successfully deposited Rs.${amount} to account ${accountNumber}.`;
+  await sendEmailReceipt(email, subject, message);
+
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber,
@@ -282,52 +288,101 @@ app.post('/deposit',authenticateToken, async (req, res) => {
 
 app.post('/withdraw', authenticateToken, async (req, res) => {
   const maxWithdraw = 200000;
-  const { accountNumber, amount, denominations: selectedDenominations } = req.body;
+  try {
+    const { email, accountNumber, amount, denominations: selectedDenominations } = req.body;
 
-  const user = users.find(u => u.accountNumber === accountNumber);
-  if (!user) return res.status(404).json({ message: 'User not found' });
-  if (user.balance < amount) return res.status(400).json({ message: 'Insufficient balance' });
-  if (amount <= 100) return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
-  if (amount > maxWithdraw) return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
-  if (!selectedDenominations || selectedDenominations.length === 0) {
-    return res.status(400).json({ message: 'Please select at least one denomination' });
-  }
+    if (!accountNumber) return res.status(400).json({ message: 'Account number is required' });
+    if (!amount || typeof amount !== 'number' || amount <= 0) return res.status(400).json({ message: 'Invalid amount' });
 
-  let remaining = amount;
-  const breakdown = {};
-  const tempATM = { ...atmCash };
+    const user = users.find(u => u.accountNumber === accountNumber);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.balance < amount) return res.status(400).json({ message: 'Insufficient balance' });
+    if (amount <= 100) return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
+    if (amount > maxWithdraw) return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
 
- 
-  const sortedSelected = selectedDenominations.sort((a, b) => b - a);
-
-  for (let note of sortedSelected) {
-    note = parseInt(note);
-    const needed = Math.floor(remaining / note);
-    const available = tempATM[note];
-
-    if (needed > 0 && available > 0) {
-      const count = Math.min(needed, available);
-      breakdown[note] = count;
-      remaining -= count * note;
-      tempATM[note] -= count;
+    if (!selectedDenominations || !Array.isArray(selectedDenominations) || selectedDenominations.length === 0) {
+      return res.status(400).json({ message: 'Please select at least one denomination' });
     }
+
+    let remaining = amount;
+    const breakdown = {};
+    const tempATM = { ...atmCash };
+
+    const sortedSelected = selectedDenominations.map(Number).sort((a, b) => b - a);
+
+    for (let note of sortedSelected) {
+      const needed = Math.floor(remaining / note);
+      const available = tempATM[note] || 0;
+
+      if (needed > 0 && available > 0) {
+        const count = Math.min(needed, available);
+        breakdown[note] = count;
+        remaining -= count * note;
+        tempATM[note] -= count;
+      }
+    }
+
+    if (remaining > 0) {
+      return res.status(400).json({ message: 'ATM does not have enough selected notes to fulfill this request' });
+    }
+
+    // Update ATM cash after successful calculation
+    for (let note in breakdown) {
+      atmCash[note] -= breakdown[note];
+    }
+
+    // Deduct user balance
+    user.balance -= amount;
+
+    const subject = 'ATM Withdrawal Receipt - YourBankName';
+    const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
+
+    const breakdownText = Object.entries(breakdown)
+      .map(([note, count]) => `Rs.${note} x ${count} = Rs.${note * count}`)
+      .join('\n');
+
+    const message = `
+Dear Customer,
+
+This is a confirmation of your recent ATM withdrawal.
+
+Transaction Details:
+---------------------
+Date & Time     : ${now}
+Account Number  : ${accountNumber}
+Withdrawn Amount: Rs.${amount}.00
+Note Breakdown  :
+${breakdownText}
+
+Remaining Balance: Rs.${user.balance}.00
+
+Thank you for banking with us.
+YourBankName
+`.trim();
+
+    // Send email receipt (use user email if email not provided)
+    const userEmail = email || user.email;
+    if (!userEmail) {
+      console.warn('No email provided or found, skipping email sending.');
+    } else {
+      try {
+        await sendEmailReceipt(userEmail, subject, message);
+      } catch (emailError) {
+        console.error('Failed to send withdrawal email:', emailError);
+        // Do not fail the withdrawal for email issues
+      }
+    }
+
+    return res.json({
+      message: 'Withdraw successful',
+      balance: user.balance,
+      breakdown,
+    });
+
+  } catch (error) {
+    console.error('Error during withdrawal:', error);
+    res.status(500).json({ message: "Something went wrong" });
   }
-
-  if (remaining > 0) {
-    return res.status(400).json({ message: 'ATM does not have enough selected notes to fulfill this request' });
-  }
-
-  for (let note in breakdown) {
-    atmCash[note] -= breakdown[note];
-  }
-
-  user.balance -= amount;
-
-  return res.json({
-    message: 'Withdraw successful',
-    balance: user.balance,
-    breakdown,
-  });
 });
 
 
@@ -454,6 +509,7 @@ app.post('/transfer',authenticateToken, async (req, res) => {
 });
 
 require('dotenv').config();
+const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -550,7 +606,7 @@ app.post('/verify-otp', (req, res) => {
 
 
 app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
-  const { from, to, amount } = req.body;
+  const { email,from, to, amount } = req.body;
 
   const sender = users.find(u => u.accountNumber === from);
   const recipient = users.find(u => u.accountNumber === to);
@@ -568,7 +624,9 @@ app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
 
   sender.balance -= amount;
   recipient.balance += amount;
-
+  const subject = 'Fund Transfer Receipt';
+  const message = `You have successfully transferred Rs.${amount} from account ${fromAccount} to account ${toAccount}.`;
+  await sendEmailReceipt(email, subject, message);
   await db.read();
 
   const timestamp = new Date().toISOString();
