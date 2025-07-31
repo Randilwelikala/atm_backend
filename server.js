@@ -7,6 +7,7 @@ const app = express();
 const path = require('path');
 const jwt = require('jsonwebtoken');
 
+
 app.use(express.json());
 app.use(session({
   secret: 'sessionForUserLogin',
@@ -23,6 +24,7 @@ app.use(cors({
 }));
 
 const SECRET_KEY = 'your_secret_key';
+
 
 const exchangeRates = {
   USD: 350,
@@ -768,11 +770,23 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
 });
 
 
-app.get('/api/atm-cash', (req, res) => {
+app.post('/admin/login', (req, res) => {
+  const { id, password } = req.body;
+  const isValid = admins.some(admin => admin.id === id && admin.password === password);
+  if (isValid) {
+    res.status(200).json({ message: 'Login successful' });
+  } else {
+    res.status(401).json({ message: 'Invalid ID or Password' });
+  }
+});
+
+
+
+app.get('/atm-cash', (req, res) => {
   res.json(atmCash);
 });
 
-app.post('/api/atm-cash/update', (req, res) => {
+app.post('/atm-cash/update', (req, res) => {
   const { denomination, count } = req.body;
   if (atmCash.hasOwnProperty(denomination)) {
     atmCash[denomination] += parseInt(count);
@@ -782,16 +796,9 @@ app.post('/api/atm-cash/update', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-
-
 
 async function startServer() {
   await initDB();
-
   const PORT = 3001;
   app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
 }
