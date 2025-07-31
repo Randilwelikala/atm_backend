@@ -85,6 +85,11 @@ const users = [
   }
 ];
 
+const admins = [
+  { id: 'admin1', password: 'admin1' },
+  { id: 'admin2', password: 'admin2' },
+];
+
 const dbFile = path.join(__dirname, 'transactions.json');
 const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, { transactions: [] });
@@ -760,6 +765,25 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
     balance: user.balance,
     transaction: txn,
   });
+});
+
+
+app.get('/api/atm-cash', (req, res) => {
+  res.json(atmCash);
+});
+
+app.post('/api/atm-cash/update', (req, res) => {
+  const { denomination, count } = req.body;
+  if (atmCash.hasOwnProperty(denomination)) {
+    atmCash[denomination] += parseInt(count);
+    res.json({ message: 'ATM cash updated', atmCash });
+  } else {
+    res.status(400).json({ message: 'Invalid denomination' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
 
 
