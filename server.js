@@ -644,8 +644,8 @@ app.post('/verify-otp', (req, res) => {
 
 
 
-app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
-  const { email,from, to, amount } = req.body;
+app.post('/transfer-same-bank', authenticateToken, async (req, res) => {
+  const { email, from, to, amount } = req.body;
 
   const sender = users.find(u => u.accountNumber === from);
   const recipient = users.find(u => u.accountNumber === to);
@@ -663,9 +663,7 @@ app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
 
   sender.balance -= amount;
   recipient.balance += amount;
-  const subject = 'Fund Transfer Receipt';
-  const message = `You have successfully transferred Rs.${amount} from account ${fromAccount} to account ${toAccount}.`;
-  await sendEmailReceipt(email, subject, message);
+
   await db.read();
 
   const timestamp = new Date().toISOString();
@@ -695,26 +693,39 @@ app.post('/transfer-same-bank',authenticateToken, async (req, res) => {
   db.data.transactions.push(senderTxn, receiverTxn);
   await db.write();
 
+  // Send email
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email || sender.email,
+    subject: 'Fund Transfer Receipt',
+    text: `Dear Customer,\n\nYou have successfully transferred Rs.${amount} from account ${from} to account ${to} on ${new Date().toLocaleString()}.\n\nThank you for using our service.`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    // Email failure is not critical, do not interrupt transaction
+  }
+
   res.json({
-  message: 'Transfer successful',
-  senderBalance: sender.balance,
-  recipientBalance: recipient.balance,
-  transactions: [senderTxn, receiverTxn],
-  from,
-  to,
-  transferred: amount,
-  bank: 'Same Bank',
-  senderNewBalance: sender.balance,
-  senderName: sender.name,
-  recipientName: recipient.name,
-  transactionId: senderTxn.id, 
-  timestamp,
-  senderBankName: sender.bankName,
-  recipientBankName: recipient.bankName,
+    message: 'Transfer successful',
+    senderBalance: sender.balance,
+    recipientBalance: recipient.balance,
+    transactions: [senderTxn, receiverTxn],
+    from,
+    to,
+    transferred: amount,
+    bank: 'Same Bank',
+    senderNewBalance: sender.balance,
+    senderName: sender.name,
+    recipientName: recipient.name,
+    transactionId: senderTxn.id,
+    timestamp,
+    senderBankName: sender.bankName,
+    recipientBankName: recipient.bankName,
+  });
 });
-
-});
-
 
 
 
