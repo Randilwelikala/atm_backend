@@ -6,6 +6,7 @@ const session = require('express-session');
 const app = express();
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
 
 app.use(express.json());
@@ -50,7 +51,9 @@ const users = [
     pin: '1234', 
     balance: 900000, 
     cardNumber: '1234123412341234', 
-    mobile: '0711186189' 
+    mobile: '0711186189', 
+    countyr:'Sri Lanka',
+    email:"randilgimantha646@gmail.com"
   },
   { 
     name: 'User 2', 
@@ -450,6 +453,17 @@ app.post('/transfer',authenticateToken, async (req, res) => {
   });
 });
 
+require('dotenv').config();
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+
 app.post('/verify-mobile',  (req, res) => {
   const { mobile } = req.body;
   if (!/^07\d{8}$/.test(mobile)) {
@@ -462,64 +476,75 @@ app.post('/verify-mobile',  (req, res) => {
 const otpStore = {};
 
 
+
+
 app.post('/send-otp', (req, res) => {
-  const { mobile } = req.body;
-  if (!mobile || !/^07\d{8}$/.test(mobile)) {
-    return res.status(400).json({ message: 'Invalid mobile number format' });
+  const { email } = req.body;
+
+  if (!email || !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
   }
-  
 
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-  otpStore[mobile] = {
+  otpStore[email] = {
     otp,
     expiresAt: Date.now() + 5 * 60 * 1000
   };
 
-  console.log(`Sending OTP ${otp} to mobile ${mobile}`); 
+  // Send email
+  const mailOptions = {
+    from: 'your-email@gmail.com',     // <-- same as auth.user
+    to: email,
+    subject: 'Your OTP Code',
+    text: `Your OTP is ${otp}. It will expire in 5 minutes.`
+  };
 
-  res.json({ message: 'OTP sent successfully', otp }); 
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+      return res.status(500).json({ message: 'Failed to send OTP email' });
+    }
+    console.log(`Sending OTP ${otp} to email ${mobile}`); 
+    res.json({ message: 'OTP sent successfully to email' });
+   
+  });
 });
-
-
-
 
 
 app.post('/verify-otp', (req, res) => {
-  const { mobile, otp } = req.body;
-  if (!mobile || !otp) {
-    return res.status(400).json({ message: 'Mobile and OTP are required' });
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ message: 'Email and OTP are required' });
   }
-  
-  const record = otpStore[mobile];
+
+  const record = otpStore[email];
   if (!record) {
-    return res.status(400).json({ message: 'No OTP sent to this mobile' });
+    return res.status(400).json({ message: 'No OTP sent to this email' });
   }
-  
+
   if (Date.now() > record.expiresAt) {
-    delete otpStore[mobile];
+    delete otpStore[email];
     return res.status(400).json({ message: 'OTP expired' });
   }
-  
+
   if (record.otp !== otp) {
     return res.status(400).json({ message: 'Invalid OTP' });
   }
-  
-   delete otpStore[mobile];
-  
-  
-  const user = users.find(u => u.mobile === mobile);
-  
+
+  delete otpStore[email];
+
+  // Optional: check if user exists
+  const user = users.find(u => u.email === email); // assuming 'users' exists
   if (!user) {
-    return res.status(404).json({ message: 'User not found for this mobile' });
+    return res.status(404).json({ message: 'User not found for this email' });
   }
-  const token = jwt.sign({ accountNumber: user.accountNumber }, SECRET_KEY, { expiresIn: '1h' });
 
-  
-  
-  res.json({ message: 'OTP verified successfully', accountNumber: user.accountNumber,token: token });
+  const token = jwt.sign({ email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+
+  res.json({ message: 'OTP verified successfully', email: user.email, token });
 });
-
 
 
 
