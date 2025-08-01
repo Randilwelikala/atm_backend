@@ -1486,6 +1486,49 @@
       "timestamp": "2025-07-31T09:36:42.625Z",
       "status": "success",
       "from": "123456789012"
+    },
+    {
+      "id": "TXN17539564152116386",
+      "accountNumber": "123456789012",
+      "type": "transfer-out",
+      "amount": 1000,
+      "balanceAfter": 899000,
+      "timestamp": "2025-07-31T10:06:55.211Z",
+      "status": "success",
+      "to": "123456789101"
+    },
+    {
+      "id": "TXN17539564152115331",
+      "accountNumber": "123456789101",
+      "type": "transfer-in",
+      "amount": 1000,
+      "balanceAfter": 3000,
+      "timestamp": "2025-07-31T10:06:55.211Z",
+      "status": "success",
+      "from": "123456789012"
+    },
+    {
+      "id": "TXN17539605024718236",
+      "accountNumber": "123456789101",
+      "type": "deposit",
+      "amount": 1000,
+      "balanceAfter": 4000,
+      "timestamp": "2025-07-31T11:15:02.471Z",
+      "status": "success",
+      "breakdown": {}
+    },
+    {
+      "id": "TXN1753961306521",
+      "branch": "Sender Branch",
+      "fromAccount": "123456789012",
+      "toAccount": "123456789101",
+      "amount": 2,
+      "rbank": "Smart Bank",
+      "sbank": "Smart Bank",
+      "currency": "USD",
+      "requiredLKR": 700,
+      "timestamp": "2025-07-31T11:28:26.522Z",
+      "status": "Success"
     }
   ]
 }

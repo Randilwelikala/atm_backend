@@ -962,6 +962,18 @@ app.post('/atm-cash/update', (req, res) => {
 });
 
 
+app.get('/check-hardware-status', (req, res) => {  
+  const fail = Math.random() < 0.3;
+
+  if (fail) {
+    return res.status(500).json({ message: 'ATM Hardware Failure! Please contact support.' });
+  }
+
+  return res.status(200).json({ message: 'Hardware OK' });
+});
+
+
+
 async function startServer() {
   await initDB();
   const PORT = 3001;
