@@ -11,6 +11,7 @@ const axios = require('axios');
 const fs = require('fs');
 // const path = require('path');
 const transactionsFilePath = path.join(__dirname, 'transaction.json');
+app.use(express.json());
 
 function getTransactions() {
   const data = fs.readFileSync(transactionsFilePath, 'utf-8');
@@ -126,6 +127,15 @@ const admins = [
   }  
 ];
 
+const audits = [
+
+  { name: 'audit1',
+    id: 'audit1', 
+    password: 'audit1',
+    adminEmails:'randilgimantha646@gmail.com'
+  }  
+];
+
 const dbFile = path.join(__dirname, 'transactions.json');
 const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, { transactions: [] });
@@ -137,6 +147,35 @@ users.forEach(user => {
 });
 
 
+const auditFile = path.join(process.cwd(), 'audit.json');
+const auditAdapter = new JSONFile(auditFile);
+const auditDB = new Low(auditAdapter, { audits: [] });
+
+async function initAuditDB() {
+  await auditDB.read();
+  if (!auditDB.data) {
+    auditDB.data = { audits: [] };
+    await auditDB.write();
+  }
+}
+
+async function startAudit() {
+  await initAuditDB();
+}
+
+startAudit();
+
+
+
+async function logAuditEvent(event) {
+  await auditDB.read();
+  auditDB.data.audits.push({
+    id: `AUDIT${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
+    timestamp: new Date().toISOString(),
+    ...event,
+  });
+  await auditDB.write();
+}
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -287,6 +326,16 @@ app.post('/deposit', authenticateToken, async (req, res) => {
 
     user.balance += amount;
 
+    await logAuditEvent({
+      type: 'deposit',
+      accountNumber,
+      amount,
+      balanceAfter: user.balance,
+      performedBy: req.user.accountNumber,
+      ip: req.ip,
+    });
+
+
     const subject = 'Deposit Receipt - YourBankName';
     const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
 
@@ -397,6 +446,16 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
     }
     
     user.balance -= amount;
+    await logAuditEvent({
+      type: 'withdraw',
+      accountNumber,
+      amount,
+      denominations: selectedDenominations,
+      balanceAfter: user.balance,
+      performedBy: req.user.accountNumber,
+      ip: req.ip,
+    });
+
 
     const subject = 'ATM Withdrawal Receipt - YourBankName';
     const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
@@ -513,6 +572,14 @@ app.post('/changepin', authenticateToken, async (req, res) => {
 
   user.pin = newPin;
 
+    await logAuditEvent({
+    type: 'pin-change',
+    accountNumber,
+    performedBy: req.user.accountNumber,
+    ip: req.ip,
+  });
+
+
  
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -546,6 +613,18 @@ app.post('/transfer',authenticateToken, async (req, res) => {
 
   sender.balance -= amount;
   receiver.balance += amount;
+
+  await logAuditEvent({
+    type: 'transfer',
+    from,
+    to,
+    amount,
+    fromBalanceAfter: sender.balance,
+    toBalanceAfter: receiver.balance,
+    performedBy: req.user.accountNumber,
+    ip: req.ip,
+  });
+
 
   const timestamp = new Date().toISOString();
 
@@ -704,6 +783,18 @@ app.post('/transfer-same-bank', authenticateToken, async (req, res) => {
   sender.balance -= amount;
   recipient.balance += amount;
 
+  await logAuditEvent({
+    type: 'transfer-same-bank',
+    from,
+    to,
+    amount,
+    fromBalanceAfter: sender.balance,
+    toBalanceAfter: recipient.balance,
+    performedBy: req.user.accountNumber,
+    ip: req.ip,
+  });
+
+
   await db.read();
 
   const timestamp = new Date().toISOString();
@@ -791,6 +882,17 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
   recipient.balance += amount;
 
   await db.read();
+  await logAuditEvent({
+    type: 'transfer-other-bank',
+    from,
+    to,
+    amount,
+    fromBalanceAfter: sender.balance,
+    toBalanceAfter: recipient.balance,
+    performedBy: req.user.accountNumber,
+    ip: req.ip,
+  });
+
 
   const timestamp = new Date().toISOString();
 
@@ -876,10 +978,22 @@ app.post('/foreign-transfer', async (req, res) => {
   };
 
   await db.read();
+  await logAuditEvent({
+    type: 'foreign-transfer',
+    fromAccount,
+    toAccount,
+    amount,
+    currency,
+    exchangeRate: exchangeRates[currency],
+    requiredLKR,
+    fromBalanceAfter: sender.balance,
+    performedBy: req.user ? req.user.accountNumber : null,
+    ip: req.ip,
+  });
+
   db.data.transactions.push(transaction);
   await db.write();
 
-  // Prepare email
   const subject = 'Foreign Transfer Receipt - YourBankName';
   const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
 
@@ -953,6 +1067,17 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
   user.balance += localAmount;
 
   await db.read();
+  await logAuditEvent({
+    type: 'foreign-deposit',
+    accountNumber,
+    amount: localAmount,
+    currency,
+    exchangeRate: rate,
+    balanceAfter: user.balance,
+    performedBy: req.user.accountNumber,
+    ip: req.ip,
+  });
+
   const txn = {
     id: `TXN${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`,
     accountNumber,
@@ -978,6 +1103,15 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
 app.post('/admin/login', (req, res) => {
   const { id, password } = req.body;
   const isValid = admins.some(admin => admin.id === id && admin.password === password);
+  if (isValid) {
+    res.status(200).json({ message: 'Login successful' });
+  } else {
+    res.status(401).json({ message: 'Invalid ID or Password' });
+  }
+});
+app.post('/audit/login', (req, res) => {
+  const { id, password } = req.body;
+  const isValid = audits.some(audit => audit.id === id && audit.password === password);
   if (isValid) {
     res.status(200).json({ message: 'Login successful' });
   } else {
@@ -1032,16 +1166,24 @@ app.post('/check-atm-cash', async (req, res) => {
   }
 });
 
-app.post('/atm-cash/update', (req, res) => {
+app.post('/atm-cash/update', authenticateToken, async (req, res) => {
   const { denomination, count } = req.body;
   if (atmCash.hasOwnProperty(denomination)) {
     atmCash[denomination] += parseInt(count);
-    res.json({ message: 'ATM cash updated', atmCash });
+
+    await logAuditEvent({
+      type: 'atm-cash-update',
+      denomination,
+      count: parseInt(count),
+      performedBy: req.user ? req.user.accountNumber : 'system',
+      ip: req.ip,
+    });
+
+    return res.json({ message: 'ATM cash updated', atmCash });
   } else {
-    res.status(400).json({ message: 'Invalid denomination' });
+    return res.status(400).json({ message: 'Invalid denomination' });
   }
 });
-
 
 app.get('/check-hardware-status', (req, res) => {  
   const fail = Math.random() < 0;

@@ -1,0 +1,14 @@
+{
+  "audits": [
+    {
+      "id": "AUDIT17540449892406717",
+      "timestamp": "2025-08-01T10:43:09.240Z",
+      "type": "deposit",
+      "accountNumber": "123456789012",
+      "amount": 1000,
+      "balanceAfter": 901000,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    }
+  ]
+}
