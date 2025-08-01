@@ -8,6 +8,30 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const { sendEmailReceipt } = require('./emailService');
 const axios = require('axios');
+const fs = require('fs');
+// const path = require('path');
+const transactionsFilePath = path.join(__dirname, 'transaction.json');
+
+function getTransactions() {
+  const data = fs.readFileSync(transactionsFilePath, 'utf-8');
+  return JSON.parse(data).transactions;
+}
+
+
+
+function getGroupedTransactions() {
+  const transactions = getTransactions();
+
+  const groupedTransactions = {};
+
+  transactions.forEach(tx => {
+    const bankName = accountToBankMap[tx.accountNumber] || 'Unknown Bank';
+    if (!groupedTransactions[bankName]) groupedTransactions[bankName] = [];
+    groupedTransactions[bankName].push(tx);
+  });
+
+  return groupedTransactions;
+}
 
 
 
@@ -106,6 +130,11 @@ const dbFile = path.join(__dirname, 'transactions.json');
 const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, { transactions: [] });
 const adminEmails = admins.map(admin => admin.adminEmails);
+
+const accountToBankMap = {};
+users.forEach(user => {
+  accountToBankMap[user.accountNumber] = user.bankName;
+});
 
 
 
@@ -1023,6 +1052,39 @@ app.get('/check-hardware-status', (req, res) => {
 
   return res.status(200).json({ message: 'Hardware OK' });
 });
+
+app.get('/admin/transactions', async (req, res) => {
+  await db.read();
+
+  const txns = db.data.transactions;
+
+  const enrichedTxns = txns.map(txn => {
+    const user = users.find(u => 
+      u.accountNumber === txn.accountNumber || 
+      u.accountNumber === txn.from || 
+      u.accountNumber === txn.to
+    );
+
+    let direction = '';
+    if (txn.from === user?.accountNumber) direction = 'debit';
+    else if (txn.to === user?.accountNumber) direction = 'credit';
+    else {
+      const isDeposit = txn.type && (txn.type.toLowerCase().includes('deposit') || txn.type.toLowerCase().includes('in'));
+      direction = isDeposit ? 'credit' : 'debit';
+    }
+
+    return {
+      ...txn,
+      bankName: user?.bankName || 'Unknown Bank',
+      userName: user?.name || 'Unknown User',
+      direction,
+      displayAmount: (direction === 'credit' ? '+' : '-') + txn.amount,
+    };
+  });
+
+  res.json(enrichedTxns);
+});
+
 
 
 
