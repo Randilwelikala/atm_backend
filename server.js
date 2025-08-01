@@ -242,7 +242,7 @@ app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
 
 
 app.post('/deposit', authenticateToken, async (req, res) => {
-  const { email, accountNumber, amount } = req.body;
+  const { email, accountNumber, amount, } = req.body;
   const MAX_DEPOSIT = 50000;
 
   try {
