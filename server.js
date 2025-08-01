@@ -7,6 +7,7 @@ const app = express();
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const { sendEmailReceipt } = require('./emailService');
+const axios = require('axios');
 
 
 
@@ -39,7 +40,7 @@ const atmCash = {
     5000: 10,
     2000: 20,
     1000: 50,
-    500: 100,
+    500: 41,
     100: 200,
     50: 100
   };
@@ -93,13 +94,18 @@ const users = [
 ];
 
 const admins = [
-  { id: 'admin1', password: 'admin1' },
-  { id: 'admin2', password: 'admin2' },
+
+  { name: 'admin1',
+    id: 'admin1', 
+    password: 'admin1',
+    adminEmails:'randilgimantha646@gmail.com'
+  }  
 ];
 
 const dbFile = path.join(__dirname, 'transactions.json');
 const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, { transactions: [] });
+const adminEmails = admins.map(admin => admin.adminEmails);
 
 
 
@@ -354,6 +360,11 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
     
     for (let note in breakdown) {
       atmCash[note] -= breakdown[note];
+    }
+    try {
+      await axios.post('http://localhost:3001/check-atm-cash');
+    } catch (err) {
+      console.error('ATM cash check failed:', err.message);
     }
     
     user.balance -= amount;
@@ -951,6 +962,47 @@ app.get('/atm-cash', (req, res) => {
   res.json(atmCash);
 });
 
+app.post('/check-atm-cash', async (req, res) => {
+  try {
+    const lowCashDenoms = Object.entries(atmCash)
+      .filter(([note, count]) => count <= 5)
+      .map(([note, count]) => `Rs.${note} - ${count} notes remaining`);
+
+    if (lowCashDenoms.length === 0) {
+      return res.json({ message: 'ATM cash is sufficient' });
+    }
+
+    const subject = '⚠️ Low Cash Alert in ATM';
+    const message = `
+      Attention Admin,
+
+      The ATM is running low on the following denominations:
+
+      ${lowCashDenoms.join('\n')}
+
+      Please take necessary action to refill the ATM.
+
+      Regards,
+      ATM Monitoring System
+    `.trim();
+
+    for (const email of adminEmails) {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject,
+        text: message,
+      });
+    }
+
+    return res.json({ message: 'Low cash alert sent to admins', lowCashDenoms });
+
+  } catch (error) {
+    console.error('Error checking ATM cash:', error);
+    res.status(500).json({ message: 'Failed to check ATM cash or send alert' });
+  }
+});
+
 app.post('/atm-cash/update', (req, res) => {
   const { denomination, count } = req.body;
   if (atmCash.hasOwnProperty(denomination)) {
@@ -963,7 +1015,7 @@ app.post('/atm-cash/update', (req, res) => {
 
 
 app.get('/check-hardware-status', (req, res) => {  
-  const fail = Math.random() < 0.3;
+  const fail = Math.random() < 0;
 
   if (fail) {
     return res.status(500).json({ message: 'ATM Hardware Failure! Please contact support.' });
