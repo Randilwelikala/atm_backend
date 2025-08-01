@@ -1228,6 +1228,13 @@ app.get('/admin/transactions', async (req, res) => {
 });
 
 
+app.get('/audits', async (req, res) => {
+  await auditDB.read();
+  res.json(auditDB.data.audits || []);
+});
+
+
+
 
 
 async function startServer() {

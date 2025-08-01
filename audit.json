@@ -9,6 +9,14 @@
       "balanceAfter": 901000,
       "performedBy": "123456789012",
       "ip": "::1"
+    },
+    {
+      "id": "AUDIT17540459066011293",
+      "timestamp": "2025-08-01T10:58:26.602Z",
+      "type": "pin-change",
+      "accountNumber": "123456789012",
+      "performedBy": "123456789012",
+      "ip": "::1"
     }
   ]
 }
