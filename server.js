@@ -628,14 +628,20 @@ app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
 
 app.get('/user/:accountNumber', authenticateToken, (req, res) => {
   const accountNumber = req.params.accountNumber;
+  const maskedAccount = accountNumber.replace(/\d(?=\d{4})/g, '*');
+  logAction(`User info requested for account ${maskedAccount} by ${req.user.accountNumber}`);
+
   if (req.user.accountNumber !== accountNumber) {
+    logAction(`Access denied for user ${req.user.accountNumber} to account ${maskedAccount}`);
     return res.status(403).json({ message: 'Access denied' });
   }
 
   const user = users.find(u => u.accountNumber === accountNumber);
   if (user) {
+    logAction(`User info retrieved for account ${maskedAccount}`);
     res.json(user);
   } else {
+    logAction(`User info request failed: Account ${maskedAccount} not found`);
     res.status(404).json({ message: 'User not found' });
   }
 });
