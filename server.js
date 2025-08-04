@@ -1421,7 +1421,7 @@ app.get('/check-hardware-status', (req, res) => {
      logAction(`Hardware status check failed: ATM Hardware Failure`);
     return res.status(500).json({ message: 'ATM Hardware Failure! Please contact support.' });
   }
-  logAction(`Hardware status check passed: Hardware OK`);
+  // logAction(`Hardware status check passed: Hardware OK`);
   return res.status(200).json({ message: 'Hardware OK' });
 });
 

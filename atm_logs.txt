@@ -1,1 +1,63 @@
 [2025-08-04T05:40:17.412Z] Card login successful: Card ************1234
+[2025-08-04T09:32:32.902Z] Hardware status check initiated
+[2025-08-04T09:32:32.910Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:32:37.887Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:32:37.887Z] Hardware status check initiated
+[2025-08-04T09:32:48.648Z] Hardware status check initiated
+[2025-08-04T09:32:48.648Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:32:53.645Z] Hardware status check initiated
+[2025-08-04T09:32:53.645Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:32:58.644Z] Hardware status check initiated
+[2025-08-04T09:32:58.644Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:03.643Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:03.643Z] Hardware status check initiated
+[2025-08-04T09:33:08.651Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:08.650Z] Hardware status check initiated
+[2025-08-04T09:33:13.644Z] Hardware status check initiated
+[2025-08-04T09:33:13.644Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:18.655Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:18.654Z] Hardware status check initiated
+[2025-08-04T09:33:23.652Z] Hardware status check initiated
+[2025-08-04T09:33:23.652Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:27.546Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-08-04T09:33:28.661Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:28.661Z] Hardware status check initiated
+[2025-08-04T09:33:33.642Z] Hardware status check initiated
+[2025-08-04T09:33:33.642Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:38.644Z] Hardware status check initiated
+[2025-08-04T09:33:38.644Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:39.400Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-08-04T09:33:39.400Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-08-04T09:33:39.413Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-08-04T09:33:39.450Z] User info retrieved for account ********9012
+[2025-08-04T09:33:39.450Z] User info requested for account ********9012 by 123456789012
+[2025-08-04T09:33:43.644Z] Hardware status check initiated
+[2025-08-04T09:33:43.645Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:48.649Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:48.649Z] Hardware status check initiated
+[2025-08-04T09:33:53.647Z] Hardware status check initiated
+[2025-08-04T09:33:53.648Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:58.643Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:33:58.643Z] Hardware status check initiated
+[2025-08-04T09:34:03.645Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:03.645Z] Hardware status check initiated
+[2025-08-04T09:34:08.648Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:08.648Z] Hardware status check initiated
+[2025-08-04T09:34:13.651Z] Hardware status check initiated
+[2025-08-04T09:34:13.651Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:18.650Z] Hardware status check initiated
+[2025-08-04T09:34:18.650Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:23.650Z] Hardware status check initiated
+[2025-08-04T09:34:23.650Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:28.645Z] Hardware status check initiated
+[2025-08-04T09:34:28.645Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:33.646Z] Hardware status check initiated
+[2025-08-04T09:34:33.647Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:38.645Z] Hardware status check passed: Hardware OK
+[2025-08-04T09:34:38.644Z] Hardware status check initiated
+[2025-08-04T09:36:38.651Z] Hardware status check initiated
+[2025-08-04T09:36:43.645Z] Hardware status check initiated
+[2025-08-04T09:36:48.633Z] Hardware status check initiated
+[2025-08-04T09:36:53.642Z] Hardware status check initiated
+[2025-08-04T09:36:58.636Z] Hardware status check initiated
+[2025-08-04T09:37:03.643Z] Hardware status check initiated
