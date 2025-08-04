@@ -1114,22 +1114,39 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
 app.post('/foreign-transfer', async (req, res) => {
   const { fromAccount, toAccount, amount, currency, branch, email } = req.body;
 
+  const maskedFrom = fromAccount?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+  const maskedTo = toAccount?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+
+  logAction(`Foreign transfer attempt: From ${maskedFrom} to ${maskedTo}, Amount: ${amount} ${currency}`);
+
   if (!fromAccount || !toAccount || !amount || !currency) {
+    logAction(`Foreign transfer failed: Missing required fields`);
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   const sender = users.find(u => u.accountNumber === fromAccount);
   const receiver = users.find(u => u.accountNumber === toAccount);
 
-  if (!sender) return res.status(404).json({ message: 'Sender not found' });
-  if (!receiver) return res.status(404).json({ message: 'Receiver not found' });
-  if (!exchangeRates[currency]) return res.status(400).json({ message: 'Unsupported currency' });
+  if (!sender) {
+    logAction(`Foreign transfer failed: Sender ${maskedFrom} not found`);
+    return res.status(404).json({ message: 'Sender not found' });
+  }
+  if (!receiver) {
+    logAction(`Foreign transfer failed: Receiver ${maskedTo} not found`);
+    return res.status(404).json({ message: 'Receiver not found' });
+  }
+  if (!exchangeRates[currency]) {
+    logAction(`Foreign transfer failed: Unsupported currency "${currency}"`);
+    return res.status(400).json({ message: 'Unsupported currency' });}
 
   const rbank = receiver.bankName;
   const sbank = sender.bankName;
 
   const requiredLKR = amount * exchangeRates[currency];
-  if (sender.balance < requiredLKR) return res.status(400).json({ message: 'Insufficient balance' });
+  if (sender.balance < requiredLKR) {
+    logAction(`Foreign transfer failed: Insufficient balance in account ${maskedFrom}`);
+    return res.status(400).json({ message: 'Insufficient balance' });
+  }
 
   sender.balance -= requiredLKR;
 
@@ -1164,6 +1181,8 @@ app.post('/foreign-transfer', async (req, res) => {
   db.data.transactions.push(transaction);
   await db.write();
 
+  logAction(`Foreign transfer success: Rs.${requiredLKR.toFixed(2)} from ${maskedFrom} to ${maskedTo} (${amount} ${currency})`);
+
   const subject = 'Foreign Transfer Receipt - YourBankName';
   const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
 
@@ -1187,11 +1206,13 @@ YourBankName
 
   const userEmail = email || sender.email;
   if (!userEmail) {
+    logAction(`Foreign transfer warning: No email for account ${maskedFrom}, skipping email.`);
     console.warn('No email provided or found, skipping email sending.');
   } else {
     try {
       await sendEmailReceipt(userEmail, subject, message);
     } catch (emailError) {
+      logAction(`Foreign transfer warning: Failed to send email for account ${maskedFrom}`);
       console.error('Failed to send foreign transfer email:', emailError);
     }
   }
