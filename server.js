@@ -1390,6 +1390,8 @@ app.post('/check-atm-cash', async (req, res) => {
 
 app.post('/atm-cash/update', authenticateToken, async (req, res) => {
   const { denomination, count } = req.body;
+
+  logAction(`ATM cash update attempt by ${account}: Denomination Rs.${denomination}, Count ${count}`);
   if (atmCash.hasOwnProperty(denomination)) {
     atmCash[denomination] += parseInt(count);
 
@@ -1401,8 +1403,11 @@ app.post('/atm-cash/update', authenticateToken, async (req, res) => {
       ip: req.ip,
     });
 
+    logAction(`ATM cash updated by ${account}: Rs.${denomination} x ${count} added`);
+
     return res.json({ message: 'ATM cash updated', atmCash });
   } else {
+    logAction(`ATM cash update failed by ${account}: Invalid denomination Rs.${denomination}`);
     return res.status(400).json({ message: 'Invalid denomination' });
   }
 });
