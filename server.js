@@ -906,17 +906,30 @@ app.post('/verify-otp', (req, res) => {
 app.post('/transfer-same-bank', authenticateToken, async (req, res) => {
   const { email, from, to, amount } = req.body;
 
+  const maskedFrom = from?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+  const maskedTo = to?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+
+  logAction(`Same-bank transfer attempt: From ${maskedFrom} to ${maskedTo}, Amount Rs.${amount}`);
+
   const sender = users.find(u => u.accountNumber === from);
   const recipient = users.find(u => u.accountNumber === to);
 
-  if (!sender) return res.status(404).json({ error: 'Sender account not found' });
-  if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
+  if (!sender) {
+    logAction(`Transfer failed: Sender account ${maskedFrom} not found`);
+    return res.status(404).json({ error: 'Sender account not found' });
+  }
+  if (!recipient) {
+    logAction(`Transfer failed: Recipient account ${maskedTo} not found`);
+    return res.status(404).json({ error: 'Recipient account not found' });
+  }
 
   if (sender.bankName !== recipient.bankName) {
+    logAction(`Transfer failed: Bank mismatch (sender: ${sender.bankName}, recipient: ${recipient.bankName})`);
     return res.status(400).json({ error: 'You can do this transaction by using Other Bank Transfer Section' });
   }
 
   if (sender.balance < amount) {
+    logAction(`Transfer failed: Insufficient funds in account ${maskedFrom}`);
     return res.status(400).json({ error: 'Insufficient funds' });
   }
 
@@ -934,6 +947,7 @@ app.post('/transfer-same-bank', authenticateToken, async (req, res) => {
     ip: req.ip,
   });
 
+  logAction(`Transfer successful: Rs.${amount} from ${maskedFrom} to ${maskedTo}. Sender new balance: Rs.${sender.balance}`);
 
   await db.read();
 
@@ -975,6 +989,7 @@ app.post('/transfer-same-bank', authenticateToken, async (req, res) => {
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
+    logAction(`Warning: Email sending failed for transaction ${senderTxn.id} - ${error.message}`);
     console.error('Email sending failed:', error);
     // Email failure is not critical, do not interrupt transaction
   }
