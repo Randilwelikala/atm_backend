@@ -1305,10 +1305,14 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
 
 app.post('/admin/login', (req, res) => {
   const { id, password } = req.body;
+
+  logAction(`Admin login attempt: ID ${id}`);
   const isValid = admins.some(admin => admin.id === id && admin.password === password);
   if (isValid) {
+    logAction(`Admin login successful: ID ${id}`);
     res.status(200).json({ message: 'Login successful' });
   } else {
+     logAction(`Admin login failed: Invalid credentials for ID ${id}`);
     res.status(401).json({ message: 'Invalid ID or Password' });
   }
 });
