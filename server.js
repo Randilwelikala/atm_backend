@@ -436,17 +436,40 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
   const maxWithdraw = 200000;
   try {
     const { email, accountNumber, amount, denominations: selectedDenominations } = req.body;
+    const maskedAccount = accountNumber?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
 
-    if (!accountNumber) return res.status(400).json({ message: 'Account number is required' });
-    if (!amount || typeof amount !== 'number' || amount <= 0) return res.status(400).json({ message: 'Invalid amount' });
+
+    logAction(`Withdraw attempt: Account ${maskedAccount}, Amount Rs.${amount}`);
+
+    if (!accountNumber) {
+      logAction(`Withdraw failed: No account number provided`);
+      return res.status(400).json({ message: 'Account number is required' });
+  }
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      logAction(`Withdraw failed: Invalid amount for account ${maskedAccount}`);
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
 
     const user = users.find(u => u.accountNumber === accountNumber);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    if (user.balance < amount) return res.status(400).json({ message: 'Insufficient balance' });
-    if (amount <= 100) return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
-    if (amount > maxWithdraw) return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
+    if (!user) {
+      logAction(`Withdraw failed: User not found for account ${maskedAccount}`);
+      return res.status(404).json({ message: 'User not found' });}
+
+    if (user.balance < amount) {
+      logAction(`Withdraw failed: Insufficient balance for account ${maskedAccount}`);
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+    if (amount <= 100) {
+      logAction(`Withdraw failed: Amount below minimum (Rs.100.00) for account ${maskedAccount}`);
+      return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
+    }
+    if (amount > maxWithdraw) {
+      logAction(`Withdraw failed: Amount exceeds Rs.${maxWithdraw} for account ${maskedAccount}`);
+      return res.status(400).json({ message: `Withdraw limit exceeded (max ${maxWithdraw})` });
+    }
 
     if (!selectedDenominations || !Array.isArray(selectedDenominations) || selectedDenominations.length === 0) {
+      logAction(`Withdraw failed: No denominations selected for account ${maskedAccount}`);
       return res.status(400).json({ message: 'Please select at least one denomination' });
     }
 
@@ -469,6 +492,7 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
     }
 
     if (remaining > 0) {
+      logAction(`Withdraw failed: Not enough selected notes to fulfill request for account ${maskedAccount}`);
       return res.status(400).json({ message: 'ATM does not have enough selected notes to fulfill this request' });
     }
     
@@ -478,6 +502,7 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
     try {
       await axios.post('http://localhost:3001/check-atm-cash');
     } catch (err) {
+      logAction(`ATM cash check failed after withdrawal for account ${maskedAccount}: ${err.message}`);
       console.error('ATM cash check failed:', err.message);
     }
     
@@ -492,6 +517,7 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
       ip: req.ip,
     });
 
+    logAction(`Withdraw successful: Rs.${amount} from account ${maskedAccount}, New Balance Rs.${user.balance}`);
 
     const subject = 'ATM Withdrawal Receipt - YourBankName';
     const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
@@ -522,11 +548,13 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
    
     const userEmail = email || user.email;
     if (!userEmail) {
+      logAction(`Withdraw warning: No email provided or found for account ${maskedAccount}`);
       console.warn('No email provided or found, skipping email sending.');
     } else {
       try {
         await sendEmailReceipt(userEmail, subject, message);
       } catch (emailError) {
+        logAction(`Withdraw warning: Failed to send email to ${userEmail} for account ${maskedAccount}`);
         console.error('Failed to send withdrawal email:', emailError);       
       }
     }
@@ -538,6 +566,7 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
     });
 
   } catch (error) {
+    logAction(`Withdraw error for account ${req.body.accountNumber || 'unknown'}: ${error.message}`);
     console.error('Error during withdrawal:', error);
     res.status(500).json({ message: "Something went wrong" });
   }
