@@ -575,11 +575,22 @@ app.post('/withdraw', authenticateToken, async (req, res) => {
 
 app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
   const { accountNumber } = req.params;
+  const maskedAccount = accountNumber.replace(/\d(?=\d{4})/g, '*');
+  logAction(`Transaction history requested for account ${maskedAccount}`);
+  try{
+
   await db.read();
 
   const txns = db.data.transactions.filter(t =>
     t.accountNumber === accountNumber || t.from === accountNumber || t.to === accountNumber
   );
+
+  if (txns.length === 0) {
+      logAction(`Transaction history: No records found for account ${maskedAccount}`);
+    } else {
+      logAction(`Transaction history: ${txns.length} records found for account ${maskedAccount}`);
+    }
+
 
   const formatted = txns.map(t => {
     if (t.from === accountNumber) {
@@ -607,6 +618,11 @@ app.get('/transactions/:accountNumber', authenticateToken,async (req, res) => {
   });
 
   res.json(formatted);
+} catch (error) {
+    logAction(`Transaction history error for account ${maskedAccount}: ${error.message || error}`);
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Failed to fetch transaction history' });
+  }
 });
 
 
