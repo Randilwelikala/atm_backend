@@ -1469,8 +1469,15 @@ app.get('/admin/transactions', async (req, res) => {
 
 
 app.get('/audits', async (req, res) => {
+  try{
   await auditDB.read();
   res.json(auditDB.data.audits || []);
+  logAction(`Audit log accessed: ${audits.length} records fetched`);
+}catch (error) {
+    logAction(`Error accessing audit logs: ${error.message}`);
+    console.error('Audit log fetch failed:', error);
+    res.status(500).json({ message: 'Failed to retrieve audit logs' });
+  }
 });
 
 
