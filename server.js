@@ -1318,10 +1318,14 @@ app.post('/admin/login', (req, res) => {
 });
 app.post('/audit/login', (req, res) => {
   const { id, password } = req.body;
+  logAction(`Audit login attempt with ID: ${id}`);
+
   const isValid = audits.some(audit => audit.id === id && audit.password === password);
   if (isValid) {
+    logAction(`Audit login successful for ID: ${id}`);
     res.status(200).json({ message: 'Login successful' });
   } else {
+    logAction(`Audit login failed for ID: ${id}`);
     res.status(401).json({ message: 'Invalid ID or Password' });
   }
 });
