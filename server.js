@@ -12,6 +12,8 @@ const fs = require('fs');
 // const path = require('path');
 const transactionsFilePath = path.join(__dirname, 'transaction.json');
 app.use(express.json());
+const { logAction } = require('./logger');
+
 
 function getTransactions() {
   const data = fs.readFileSync(transactionsFilePath, 'utf-8');
@@ -249,13 +251,17 @@ app.listen(3001, () => {
 
 app.post('/login', (req, res) => {
   const { accountNumber, pin } = req.body;
+  const maskedAccount = accountNumber.replace(/\d(?=\d{4})/g, '*');
+  logAction(`Login attempt: Account ${maskedAccount}`);
   const user = users.find(u => u.accountNumber === accountNumber && u.pin === pin);
   if (user) {    
     
      const token = jwt.sign({ id: user.id, accountNumber }, SECRET_KEY, { expiresIn: '1h' }); 
      res.json({ success: true, balance: user.balance,token }); 
+     logAction(`Login successful: Account ${maskedAccount}`);
      return res.json({ token });  
   } else {
+     logAction(`Login failed: Invalid PIN or account ${maskedAccount}`);
     res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
   }
 });
