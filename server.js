@@ -80,7 +80,7 @@ const users = [
     balance: 900000, 
     cardNumber: '1234123412341234', 
     mobile: '0711186189', 
-    countyr:'Sri Lanka',
+    country:'Sri Lanka',
     email:"randilgimantha646@gmail.com"
   },
   { 
@@ -92,7 +92,8 @@ const users = [
     pin: '4321', 
     balance: 2000, 
     cardNumber: '1235123512351235', 
-    mobile: '0712345679'
+    mobile: '0712345679',
+    country:'Japan',
   },
   { 
     name: 'User 3', 
@@ -103,7 +104,8 @@ const users = [
     pin: '5678',     
     balance: 5000, 
     cardNumber: '4567456745674567', 
-    mobile: '0759876543' 
+    mobile: '0759876543' ,
+    country:'Australia',
   },
   { 
     name: 'User 5', 
@@ -114,7 +116,8 @@ const users = [
     pin: '1122', 
     balance: 7500, 
     cardNumber: '3210321032103210', 
-    mobile: '0701234567' 
+    mobile: '0701234567',
+    country:'China',
   }
 ];
 
