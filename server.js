@@ -1019,17 +1019,30 @@ app.post('/transfer-same-bank', authenticateToken, async (req, res) => {
 app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
   const { from, to, amount } = req.body;
 
+  const maskedFrom = from?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+  const maskedTo = to?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+
+  logAction(`Transfer initiated: ${maskedFrom} → ${maskedTo}, Amount: Rs.${amount}`);
+
   const sender = users.find(u => u.accountNumber === from);
   const recipient = users.find(u => u.accountNumber === to);
 
-  if (!sender) return res.status(404).json({ error: 'Sender account not found' });
-  if (!recipient) return res.status(404).json({ error: 'Recipient account not found' });
+  if (!sender) {
+    logAction(`Transfer failed: Sender account ${maskedFrom} not found`);
+    return res.status(404).json({ error: 'Sender account not found' });
+  }
+  if (!recipient) {
+    logAction(`Transfer failed: Recipient account ${maskedTo} not found`);
+    return res.status(404).json({ error: 'Recipient account not found' });
+  }
 
   if (sender.bankName === recipient.bankName) {
+    logAction(`Transfer failed: Both accounts (${maskedFrom}, ${maskedTo}) belong to the same bank`);
     return res.status(400).json({ error: 'Both accounts belong to the same bank. Use the same bank transfer API.' });
   }
 
   if (sender.balance < amount) {
+    logAction(`Transfer failed: Insufficient funds in account ${maskedFrom}`);
     return res.status(400).json({ error: 'Insufficient funds' });
   }
 
@@ -1075,6 +1088,8 @@ app.post('/transfer-other-bank',authenticateToken, async (req, res) => {
 
   db.data.transactions.push(senderTxn, receiverTxn);
   await db.write();
+
+  logAction(`Transfer successful: Rs.${amount} from ${maskedFrom} (${sender.bankName}) to ${maskedTo} (${recipient.bankName})`);
 
   res.json({
   message: 'Transfer successful',
