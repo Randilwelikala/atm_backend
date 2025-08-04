@@ -832,6 +832,8 @@ app.post('/send-otp', (req, res) => {
     expiresAt: Date.now() + 5 * 60 * 1000
   };
 
+  logAction(`OTP generated and sent to ${email}`);
+
   
   const mailOptions = {
     from: 'rangran425@gmail.com',    
@@ -840,7 +842,7 @@ app.post('/send-otp', (req, res) => {
     text: `Your OTP is ${otp}. It will expire in 5 minutes.`
   };
 
-  logAction(`OTP generated and sent to ${email}`);
+  
 
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -858,34 +860,43 @@ app.post('/send-otp', (req, res) => {
 app.post('/verify-otp', (req, res) => {
   const { email, otp } = req.body;
 
+  logAction(`OTP verification attempt for email: ${email || 'undefined'}`);
+
   if (!email || !otp) {
+    logAction(`OTP verification failed: Missing email or OTP`);
     return res.status(400).json({ message: 'Email and OTP are required' });
   }
 
   const record = otpStore[email];
   if (!record) {
+    logAction(`OTP verification failed: No OTP sent to ${email}`);
     return res.status(400).json({ message: 'No OTP sent to this email' });
   }
 
   if (Date.now() > record.expiresAt) {
     delete otpStore[email];
+    logAction(`OTP verification failed: OTP expired for ${email}`);
     return res.status(400).json({ message: 'OTP expired' });
   }
 
   if (record.otp !== otp) {
+    logAction(`OTP verification failed: Invalid OTP for ${email}`);
     return res.status(400).json({ message: 'Invalid OTP' });
   }
 
   delete otpStore[email];
+  logAction(`OTP verification successful for ${email}`);
 
   // Optional: check if user exists
   const user = users.find(u => u.email === email); // assuming 'users' exists
   if (!user) {
+    logAction(`OTP verification failed: No user found for ${email}`);
     return res.status(404).json({ message: 'User not found for this email' });
   }
 
   const token = jwt.sign({ accountNumber: user.accountNumber }, SECRET_KEY, { expiresIn: '1h' });
 
+  logAction(`Token issued for ${email}, account ${user.accountNumber.replace(/\d(?=\d{4})/g, '*')}`);
   res.json({ message: 'OTP verified successfully', email: user.email, token,accountNumber: user.accountNumber });
 });
 
