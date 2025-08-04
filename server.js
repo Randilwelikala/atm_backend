@@ -312,10 +312,14 @@ app.post('/cardLogin', (req, res) => {
 
 
 app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
+  const maskedAccount = accountNumber.replace(/\d(?=\d{4})/g, '*');
   const user = users.find(u => u.accountNumber === req.params.accountNumber);
+  logAction(`Balance check requested for account ${maskedAccount}`);
   if (user) {
+    logAction(`Balance check successful for account ${maskedAccount}: Balance is ${user.balance}`);
     res.json({ balance: user.balance });
   } else {
+    logAction(`Balance check failed: Account ${maskedAccount} not found`);
     res.status(404).json({ message: 'User not found' });
   }
 });
