@@ -270,21 +270,26 @@ app.post('/login', (req, res) => {
 
 app.post('/cardLogin', (req, res) => {
   const { cardNumber, pin } = req.body;
+  const maskedCard = cardNumber ? cardNumber.toString().replace(/\d(?=\d{4})/g, '*') : 'undefined';
 
   if (!cardNumber) {
+    logAction(`Card login failed: No card number entered`);
     return res.status(401).json({ success: false, message: 'Enter a card number' });
   }
   if (!pin) {
+    logAction(`Card login failed: Invalid card length for card ${maskedCard}`);
     return res.status(401).json({ success: false, message: 'Enter a pin number' });
   }
 
   const user = users.find(u => u.cardNumber === cardNumber.toString() && u.pin === pin);
 
   if (!user) {
+    logAction(`Card login failed: Invalid credentials for card ${maskedCard}`);
     return res.status(401).json({ success: false, message: 'Invalid card number or PIN' });
   }
 
   if (cardNumber.toString().length !== 16) {
+    logAction(`Card login failed: Invalid character count for card ${maskedCard}`);
     return res.status(401).json({ success: false, message: 'Card number must be exactly 16 characters long.' });
   }
   
@@ -294,7 +299,7 @@ app.post('/cardLogin', (req, res) => {
     'your_secret_key', 
     { expiresIn: '1h' }
   );
-
+  logAction(`Card login successful: Card ${maskedCard}`);
   return res.json({
     success: true,
     balance: user.balance,
