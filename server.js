@@ -1186,7 +1186,7 @@ app.post('/atm-cash/update', authenticateToken, async (req, res) => {
 });
 
 app.get('/check-hardware-status', (req, res) => {  
-  const fail = Math.random() < 0;
+  const fail = Math.random() <0 ;
 
   if (fail) {
     return res.status(500).json({ message: 'ATM Hardware Failure! Please contact support.' });

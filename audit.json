@@ -17,6 +17,57 @@
       "accountNumber": "123456789012",
       "performedBy": "123456789012",
       "ip": "::1"
+    },
+    {
+      "id": "AUDIT17542780825884997",
+      "timestamp": "2025-08-04T03:28:02.588Z",
+      "type": "withdraw",
+      "accountNumber": "123456789012",
+      "amount": 1000,
+      "denominations": [
+        500
+      ],
+      "balanceAfter": 899000,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17542782026009036",
+      "timestamp": "2025-08-04T03:30:02.600Z",
+      "type": "deposit",
+      "accountNumber": "123456789012",
+      "amount": 1000,
+      "balanceAfter": 900000,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17542783082086297",
+      "timestamp": "2025-08-04T03:31:48.208Z",
+      "type": "foreign-transfer",
+      "fromAccount": "123456789012",
+      "toAccount": "123456789101",
+      "amount": 2,
+      "currency": "USD",
+      "exchangeRate": 350,
+      "requiredLKR": 700,
+      "fromBalanceAfter": 899300,
+      "performedBy": null,
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17542808755273737",
+      "timestamp": "2025-08-04T04:14:35.527Z",
+      "type": "foreign-transfer",
+      "fromAccount": "123456789012",
+      "toAccount": "123456789101",
+      "amount": 2,
+      "currency": "USD",
+      "exchangeRate": 350,
+      "requiredLKR": 700,
+      "fromBalanceAfter": 899300,
+      "performedBy": null,
+      "ip": "::1"
     }
   ]
 }
