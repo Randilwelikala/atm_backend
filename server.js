@@ -798,10 +798,17 @@ const transporter = nodemailer.createTransport({
 
 app.post('/verify-mobile',  (req, res) => {
   const { mobile } = req.body;
-  if (!/^07\d{8}$/.test(mobile)) {
-    return res.status(400).json({ message: 'Invalid mobile number format' });
+
+  logAction(`Mobile verification attempt: ${mobile}`);
+
+    if (!/^07\d{8}$/.test(mobile)) {
+      logAction(`Mobile verification failed: Invalid format (${mobile})`);
+      return res.status(400).json({ message: 'Invalid mobile number format' });
+      // logAction(`OTP sent to mobile ${mobile}: ${otp}`);
   }
   res.json({ otp: '1234' }); 
+  logAction(`OTP sent to mobile ${mobile}: ${otp}`);
+
 });
 
 
