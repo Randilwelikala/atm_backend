@@ -1415,7 +1415,7 @@ app.post('/atm-cash/update', authenticateToken, async (req, res) => {
 app.get('/check-hardware-status', (req, res) => {  
   const fail = Math.random() <0 ;
 
-  logAction(`Hardware status check initiated`);
+  // logAction(`Hardware status check initiated`);
 
   if (fail) {
      logAction(`Hardware status check failed: ATM Hardware Failure`);
