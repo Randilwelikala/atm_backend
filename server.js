@@ -1333,18 +1333,23 @@ app.post('/audit/login', (req, res) => {
 
 
 app.get('/atm-cash', (req, res) => {
+  logAction(`ATM cash status requested`);
   res.json(atmCash);
 });
 
 app.post('/check-atm-cash', async (req, res) => {
   try {
+    logAction(`ATM cash check initiated`);
     const lowCashDenoms = Object.entries(atmCash)
       .filter(([note, count]) => count <= 5)
       .map(([note, count]) => `Rs.${note} - ${count} notes remaining`);
 
     if (lowCashDenoms.length === 0) {
+      logAction(`ATM cash status: All denominations are sufficient`);
       return res.json({ message: 'ATM cash is sufficient' });
     }
+
+    logAction(`ATM cash status: Low denominations detected - ${lowCashDenoms.join(', ')}`);
 
     const subject = '⚠️ Low Cash Alert in ATM';
     const message = `
@@ -1361,18 +1366,24 @@ app.post('/check-atm-cash', async (req, res) => {
     `.trim();
 
     for (const email of adminEmails) {
+      try{
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
         subject,
         text: message,
       });
-    }
+      logAction(`Low cash alert email sent to ${email}`);
+    }catch (emailError) {
+        logAction(`Failed to send low cash alert to ${email}: ${emailError.message}`);
+        console.error(`Failed to send email to ${email}:`, emailError);
+      }}   
 
     return res.json({ message: 'Low cash alert sent to admins', lowCashDenoms });
 
   } catch (error) {
     console.error('Error checking ATM cash:', error);
+    logAction(`ATM cash check failed: ${error.message || error}`);
     res.status(500).json({ message: 'Failed to check ATM cash or send alert' });
   }
 });
