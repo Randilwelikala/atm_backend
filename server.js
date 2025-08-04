@@ -821,6 +821,7 @@ app.post('/send-otp', (req, res) => {
   const { email } = req.body;
 
   if (!email || !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+    logAction(`OTP send failed: Invalid email format (${email || 'undefined'})`);
     return res.status(400).json({ message: 'Invalid email format' });
   }
 
@@ -838,6 +839,9 @@ app.post('/send-otp', (req, res) => {
     subject: 'Your OTP Code',
     text: `Your OTP is ${otp}. It will expire in 5 minutes.`
   };
+
+  logAction(`OTP generated and sent to ${email}`);
+
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
