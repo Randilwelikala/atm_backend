@@ -1426,9 +1426,13 @@ app.get('/check-hardware-status', (req, res) => {
 });
 
 app.get('/admin/transactions', async (req, res) => {
+  try{
+    logAction(`Admin requested all transactions`);
   await db.read();
 
   const txns = db.data.transactions;
+   logAction(`Loaded ${txns.length} transactions from database`);
+
 
   const enrichedTxns = txns.map(txn => {
     const user = users.find(u => 
@@ -1453,8 +1457,14 @@ app.get('/admin/transactions', async (req, res) => {
       displayAmount: (direction === 'credit' ? '+' : '-') + txn.amount,
     };
   });
+   logAction(`Enriched transactions with user data`);
 
   res.json(enrichedTxns);
+}catch (error) {
+    logAction(`Error fetching admin transactions: ${error.message}`);
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Failed to load transactions' });
+  }
 });
 
 
