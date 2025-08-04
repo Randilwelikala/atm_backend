@@ -1230,16 +1230,24 @@ YourBankName
 
 app.post('/foreign-deposit', authenticateToken, async (req, res) => {
   const { accountNumber, amount, currency } = req.body;
+  const maskedAccount = accountNumber?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+
+  logAction(`Foreign deposit attempt: Account ${maskedAccount}, Amount ${amount} ${currency}`);
 
   if (!accountNumber || !amount || !currency) {
+    logAction(`Foreign deposit failed: Missing fields for account ${maskedAccount}`);
     return res.status(400).json({ message: 'Missing required fields' });
   }
   if (amount <= 0) {
+    logAction(`Foreign deposit failed: Invalid amount ${amount} for account ${maskedAccount}`);
     return res.status(400).json({ message: 'Amount must be greater than zero' });
   }
 
   const user = users.find(u => u.accountNumber === accountNumber);
-  if (!user) return res.status(404).json({ message: 'User not found' });
+  if (!user) {
+    logAction(`Foreign deposit failed: Account ${maskedAccount} not found`);
+    return res.status(404).json({ message: 'User not found' });
+  }
 
 
   const exchangeRates = {
@@ -1250,10 +1258,12 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
 
   const rate = exchangeRates[currency.toUpperCase()];
   if (!rate) {
+    logAction(`Foreign deposit failed: Unsupported currency ${currency} for account ${maskedAccount}`);
     return res.status(400).json({ message: 'Unsupported currency' });
   }
 
   const localAmount = amount * rate;
+  
 
   user.balance += localAmount;
 
@@ -1282,6 +1292,8 @@ app.post('/foreign-deposit', authenticateToken, async (req, res) => {
   };
   db.data.transactions.push(txn);
   await db.write();
+
+  logAction(`Foreign deposit successful: ${amount} ${currency} to account ${maskedAccount} (Rate: ${rate}), LKR ${localAmount.toFixed(2)} credited. New balance: Rs.${user.balance}`);
 
   return res.json({
     message: `Foreign currency deposit successful. Credited LKR ${localAmount.toFixed(2)}`,
