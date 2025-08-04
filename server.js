@@ -651,11 +651,24 @@ app.get('/user/:accountNumber', authenticateToken, (req, res) => {
 
 app.post('/changepin', authenticateToken, async (req, res) => {
   const { accountNumber, oldPin, newPin,} = req.body;
-  const user = users.find(u => u.accountNumber === accountNumber && u.pin === oldPin);
+  const maskedAccount = accountNumber.replace(/\d(?=\d{4})/g, '*');
 
-  if (!user) return res.status(400).json({ message: 'Invalid account number or old PIN' });
-  if (newPin === oldPin) return res.status(400).json({ message: 'New PIN cannot be same as old PIN' });
-  if (!/^\d{4}$/.test(newPin)) return res.status(400).json({ message: 'New PIN must be exactly 4 digits' });
+  logAction(`PIN change attempt for account ${maskedAccount}`);
+
+  const user = users.find(u => u.accountNumber === accountNumber && u.pin === oldPin);  
+
+  if (!user) {
+    logAction(`PIN change failed: Invalid account or old PIN for account ${maskedAccount}`);
+    return res.status(400).json({ message: 'Invalid account number or old PIN' });
+  }
+  if (newPin === oldPin) {
+    logAction(`PIN change failed: New PIN is same as old PIN for account ${maskedAccount}`);
+    return res.status(400).json({ message: 'New PIN cannot be same as old PIN' });
+  }
+  if (!/^\d{4}$/.test(newPin)) {
+    logAction(`PIN change failed: New PIN format invalid for account ${maskedAccount}`);
+    return res.status(400).json({ message: 'New PIN must be exactly 4 digits' });
+  }
 
   user.pin = newPin;
 
@@ -663,8 +676,9 @@ app.post('/changepin', authenticateToken, async (req, res) => {
     type: 'pin-change',
     accountNumber,
     performedBy: req.user.accountNumber,
-    ip: req.ip,
+    ip: req.ip,    
   });
+   logAction(`PIN change successful for account ${maskedAccount}`);
 
 
  
@@ -690,13 +704,28 @@ app.post('/changepin', authenticateToken, async (req, res) => {
 
 app.post('/transfer',authenticateToken, async (req, res) => {
   const { from, to, amount } = req.body;
-  if (from === to) return res.status(400).json({ message: 'Cannot transfer to the same account' });
+  const maskedFrom = from?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+  const maskedTo = to?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
+
+  logAction(`Transfer attempt: From ${maskedFrom} to ${maskedTo}, Amount Rs.${amount}`);
+
+  if (from === to) {
+    logAction(`Transfer failed: Sender and receiver are the same (${maskedFrom})`);
+    return res.status(400).json({ message: 'Cannot transfer to the same account' });
+  }
 
   const sender = users.find(u => u.accountNumber === from);
   const receiver = users.find(u => u.accountNumber === to);
 
-  if (!sender || !receiver) return res.status(404).json({ message: 'Invalid account number' });
-  if (sender.balance < amount) return res.status(400).json({ message: 'Insufficient funds' });
+  if (!sender || !receiver) {
+    logAction(`Transfer failed: Invalid account(s) - From: ${maskedFrom}, To: ${maskedTo}`);
+    return res.status(404).json({ message: 'Invalid account number' });
+  }
+
+  if (sender.balance < amount) {
+    logAction(`Transfer failed: Insufficient funds in account ${maskedFrom}`);
+    return res.status(400).json({ message: 'Insufficient funds' });
+  }
 
   sender.balance -= amount;
   receiver.balance += amount;
@@ -711,6 +740,8 @@ app.post('/transfer',authenticateToken, async (req, res) => {
     performedBy: req.user.accountNumber,
     ip: req.ip,
   });
+
+  logAction(`Transfer successful: Rs.${amount} from ${maskedFrom} to ${maskedTo}`);
 
 
   const timestamp = new Date().toISOString();
