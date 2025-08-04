@@ -330,17 +330,31 @@ app.get('/balance/:accountNumber',authenticateToken,  (req, res) => {
 app.post('/deposit', authenticateToken, async (req, res) => {
   const { email, accountNumber, amount, } = req.body;
   const MAX_DEPOSIT = 50000;
+  const maskedAccount = accountNumber?.replace(/\d(?=\d{4})/g, '*') || 'undefined';
 
   try {
+    logAction(`Deposit attempt: Account ${maskedAccount}, Amount Rs.${amount}`);
     if (!accountNumber) return res.status(400).json({ message: 'Account number is required' });
+    logAction(`Deposit failed: No account number provided`);
     if (amount === undefined || amount === null || typeof amount !== 'number' || amount <= 0) {
+      logAction(`Deposit failed: Invalid amount for account ${maskedAccount}`);
       return res.status(400).json({ message: 'Invalid amount' });
     }
-    if (amount < 100) return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
-    if (amount > MAX_DEPOSIT) return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
+    if (amount < 100) {
+      logAction(`Deposit failed: Amount is low than RS. 100 for account ${maskedAccount}`);
+      return res.status(400).json({ message: 'Amount must be greater than RS.100.00' });
+      
+    }
+    if (amount > MAX_DEPOSIT) {
+      logAction(`Deposit failed: Amount exceeds Rs.${MAX_DEPOSIT} for account ${maskedAccount}`);
+      return res.status(400).json({ message: `Deposit limit exceeded (max ${MAX_DEPOSIT})` });
+    }
 
     const user = users.find(u => u.accountNumber === accountNumber);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      logAction(`Deposit failed: Account ${maskedAccount} not found`);
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     user.balance += amount;
 
@@ -353,6 +367,7 @@ app.post('/deposit', authenticateToken, async (req, res) => {
       ip: req.ip,
     });
 
+    logAction(`Deposit successful: Rs.${amount} to account ${maskedAccount}, New Balance Rs.${user.balance}`);
 
     const subject = 'Deposit Receipt - YourBankName';
     const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Colombo' });
@@ -376,11 +391,13 @@ app.post('/deposit', authenticateToken, async (req, res) => {
 
     const userEmail = email || user.email;
     if (!userEmail) {
+       logAction(`Deposit warning: No email provided or found for account ${maskedAccount}, skipping email.`);
       console.warn('No email provided or found, skipping email sending.');
     } else {
       try {
         await sendEmailReceipt(userEmail, subject, message);
       } catch (emailError) {
+        logAction(`Deposit warning: Failed to send email for account ${maskedAccount}`);
         console.error('Failed to send deposit email:', emailError);
       }
     }
@@ -407,6 +424,7 @@ app.post('/deposit', authenticateToken, async (req, res) => {
       transactionId: txn.id
     });
   } catch (error) {
+    logAction(`Deposit error: ${error.message || error}`);
     console.error('Error during deposit:', error);
     res.status(500).json({ message: "Something went wrong" });
   }
