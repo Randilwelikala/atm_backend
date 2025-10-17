@@ -1,2 +1,154 @@
 [2025-08-04T09:38:35.208Z] Hardware status check initiated
 [2025-08-04T09:38:40.214Z] Hardware status check initiated
+[2025-08-04T09:39:52.244Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-08-04T09:40:01.455Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-08-04T09:40:01.454Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-08-04T09:40:01.463Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-08-04T09:40:01.487Z] User info retrieved for account ********9012
+[2025-08-04T09:40:01.487Z] User info requested for account ********9012 by 123456789012
+[2025-08-04T09:40:34.004Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-08-04T09:40:41.049Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-08-04T09:40:41.049Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-08-04T09:40:41.052Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-08-04T09:40:41.069Z] User info requested for account ********9012 by 123456789012
+[2025-08-04T09:40:41.069Z] User info retrieved for account ********9012
+[2025-08-04T09:40:46.253Z] Withdraw attempt: Account ********9012, Amount Rs.1500
+[2025-08-04T09:40:46.276Z] ATM cash check initiated
+[2025-08-04T09:40:46.277Z] ATM cash status: All denominations are sufficient
+[2025-08-04T09:40:46.290Z] Withdraw successful: Rs.1500 from account ********9012, New Balance Rs.898500
+[2025-08-04T09:41:21.771Z] User info retrieved for account ********9012
+[2025-08-04T09:41:21.771Z] User info requested for account ********9012 by 123456789012
+[2025-08-04T09:41:31.908Z] Deposit attempt: Account ********9012, Amount Rs.5000
+[2025-08-04T09:41:31.909Z] Deposit failed: No account number provided
+[2025-08-04T09:41:31.913Z] Deposit successful: Rs.5000 to account ********9012, New Balance Rs.903500
+[2025-08-04T09:53:59.353Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:04.397Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:09.399Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:14.401Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:19.395Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:24.402Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:29.403Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:34.396Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:39.399Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:54:59.413Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:09.450Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:14.463Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:19.469Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:24.465Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:29.464Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:34.460Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:39.464Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:50.173Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:55:55.183Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:00.194Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:05.185Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:10.192Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:20.194Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:25.217Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:45.224Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:50.234Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:56:55.241Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:00.238Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:05.242Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:10.254Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:15.238Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:25.267Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:30.290Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:35.294Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:40.288Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:50.309Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:57:55.327Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:00.330Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:05.337Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:10.325Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:15.321Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:20.330Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:25.336Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:30.323Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:35.331Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:40.324Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:45.325Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:50.325Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:58:55.328Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:00.324Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:05.328Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:10.326Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:20.344Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:35.386Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:45.428Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T09:59:55.463Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T10:00:00.482Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T10:00:05.470Z] Hardware status check failed: ATM Hardware Failure
+[2025-08-04T10:17:11.506Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-08-04T10:17:21.858Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-08-04T10:17:21.858Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-08-04T10:17:21.864Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-08-04T10:17:21.888Z] User info retrieved for account ********9012
+[2025-08-04T10:17:21.887Z] User info requested for account ********9012 by 123456789012
+[2025-08-04T10:19:36.371Z] Withdraw attempt: Account ********9012, Amount Rs.1000
+[2025-08-04T10:19:36.388Z] ATM cash status: All denominations are sufficient
+[2025-08-04T10:19:36.388Z] ATM cash check initiated
+[2025-08-04T10:19:36.399Z] Withdraw successful: Rs.1000 from account ********9012, New Balance Rs.899000
+[2025-10-17T09:45:17.311Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-10-17T09:49:37.232Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-10-17T09:50:21.498Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-10-17T09:50:21.498Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-10-17T09:50:21.503Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-10-17T09:50:21.531Z] User info retrieved for account ********9012
+[2025-10-17T09:50:21.531Z] User info requested for account ********9012 by 123456789012
+[2025-10-17T09:50:35.312Z] Withdraw attempt: Account ********9012, Amount Rs.15000
+[2025-10-17T09:50:35.335Z] ATM cash check initiated
+[2025-10-17T09:50:35.335Z] ATM cash status: All denominations are sufficient
+[2025-10-17T09:50:35.344Z] Withdraw successful: Rs.15000 from account ********9012, New Balance Rs.885000
+[2025-10-17T09:51:36.662Z] User info retrieved for account ********9012
+[2025-10-17T09:51:36.662Z] User info requested for account ********9012 by 123456789012
+[2025-10-17T09:51:44.647Z] Deposit failed: No account number provided
+[2025-10-17T09:51:44.647Z] Deposit attempt: Account ********9012, Amount Rs.2500
+[2025-10-17T09:51:44.651Z] Deposit successful: Rs.2500 to account ********9012, New Balance Rs.887500
+[2025-10-17T09:52:29.740Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-10-17T09:52:39.841Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-10-17T09:52:39.841Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-10-17T09:52:39.842Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-10-17T09:53:02.978Z] Foreign transfer attempt: From ********9012 to ********9101, Amount: 12 USD
+[2025-10-17T09:53:02.985Z] Foreign transfer success: Rs.4200.00 from ********9012 to ********9101 (12 USD)
+[2025-10-17T09:53:49.164Z] OTP generated and sent to randilgimantha646@gmail.com
+[2025-10-17T09:53:56.995Z] OTP verification attempt for email: randilgimantha646@gmail.com
+[2025-10-17T09:53:56.995Z] OTP verification successful for randilgimantha646@gmail.com
+[2025-10-17T09:53:56.995Z] Token issued for randilgimantha646@gmail.com, account ********9012
+[2025-10-17T09:53:57.028Z] Transaction history requested for account ********9012
+[2025-10-17T09:53:57.029Z] Transaction history: 99 records found for account ********9012
+[2025-10-17T09:54:56.366Z] Card login successful: Card ************1234
+[2025-10-17T09:55:00.804Z] User info retrieved for account ********9012
+[2025-10-17T09:55:00.804Z] User info requested for account ********9012 by 123456789012
+[2025-10-17T09:55:08.172Z] Deposit attempt: Account ********9012, Amount Rs.2500
+[2025-10-17T09:55:08.172Z] Deposit failed: No account number provided
+[2025-10-17T09:55:08.176Z] Deposit successful: Rs.2500 to account ********9012, New Balance Rs.885800
+[2025-10-17T09:55:18.784Z] User info requested for account ********9012 by 123456789012
+[2025-10-17T09:55:18.784Z] User info retrieved for account ********9012
+[2025-10-17T09:55:27.488Z] Withdraw attempt: Account ********9012, Amount Rs.2700
+[2025-10-17T09:55:27.488Z] Withdraw failed: Not enough selected notes to fulfill request for account ********9012
+[2025-10-17T09:55:30.013Z] User info requested for account ********9012 by 123456789012
+[2025-10-17T09:55:30.013Z] User info retrieved for account ********9012
+[2025-10-17T09:55:35.012Z] Withdraw attempt: Account ********9012, Amount Rs.2700
+[2025-10-17T09:55:35.019Z] ATM cash check initiated
+[2025-10-17T09:55:35.019Z] ATM cash status: All denominations are sufficient
+[2025-10-17T09:55:35.028Z] Withdraw successful: Rs.2700 from account ********9012, New Balance Rs.883100
+[2025-10-17T09:55:43.787Z] User info requested for account ********9012 by 123456789012
+[2025-10-17T09:55:43.787Z] User info retrieved for account ********9012
+[2025-10-17T09:56:06.103Z] PIN change attempt for account ********9012
+[2025-10-17T09:56:06.107Z] PIN change successful for account ********9012
+[2025-10-17T09:56:52.119Z] Admin login attempt: ID admin1
+[2025-10-17T09:56:52.119Z] Admin login successful: ID admin1
+[2025-10-17T09:56:55.180Z] ATM cash status requested
+[2025-10-17T09:57:06.182Z] ATM cash status requested
+[2025-10-17T09:57:23.476Z] ATM cash status requested
+[2025-10-17T09:57:25.899Z] Admin requested all transactions
+[2025-10-17T09:57:25.900Z] Loaded 153 transactions from database
+[2025-10-17T09:57:25.901Z] Enriched transactions with user data
+[2025-10-17T09:57:32.860Z] ATM cash status requested
+[2025-10-17T09:57:37.788Z] Admin requested all transactions
+[2025-10-17T09:57:37.789Z] Loaded 153 transactions from database
+[2025-10-17T09:57:37.789Z] Enriched transactions with user data
+[2025-10-17T09:58:46.125Z] Audit login attempt with ID: audit1
+[2025-10-17T09:58:46.125Z] Audit login successful for ID: audit1
+[2025-10-17T09:58:48.398Z] Audit log accessed: 1 records fetched

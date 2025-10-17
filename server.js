@@ -1413,7 +1413,7 @@ app.post('/atm-cash/update', authenticateToken, async (req, res) => {
 });
 
 app.get('/check-hardware-status', (req, res) => {  
-  const fail = Math.random() <0 ;
+  const fail = Math.random() <0;
 
   // logAction(`Hardware status check initiated`);
 

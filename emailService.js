@@ -10,7 +10,7 @@ const sendEmailReceipt = async (to, subject, text) => {
   });
 
   const mailOptions = {
-    from: 'rangran425@gmail.com',
+    from: '',
     to,
     subject,
     text,

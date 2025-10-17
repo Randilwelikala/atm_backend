@@ -68,6 +68,113 @@
       "fromBalanceAfter": 899300,
       "performedBy": null,
       "ip": "::1"
+    },
+    {
+      "id": "AUDIT17543004462852222",
+      "timestamp": "2025-08-04T09:40:46.285Z",
+      "type": "withdraw",
+      "accountNumber": "123456789012",
+      "amount": 1500,
+      "denominations": [
+        500
+      ],
+      "balanceAfter": 898500,
+      "performedBy": "123456789012",
+      "ip": "::ffff:127.0.0.1"
+    },
+    {
+      "id": "AUDIT17543004919103499",
+      "timestamp": "2025-08-04T09:41:31.910Z",
+      "type": "deposit",
+      "accountNumber": "123456789012",
+      "amount": 5000,
+      "balanceAfter": 903500,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17543027763967880",
+      "timestamp": "2025-08-04T10:19:36.396Z",
+      "type": "withdraw",
+      "accountNumber": "123456789012",
+      "amount": 1000,
+      "denominations": [
+        100
+      ],
+      "balanceAfter": 899000,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17606946353407195",
+      "timestamp": "2025-10-17T09:50:35.340Z",
+      "type": "withdraw",
+      "accountNumber": "123456789012",
+      "amount": 15000,
+      "denominations": [
+        5000,
+        1000
+      ],
+      "balanceAfter": 885000,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17606947046488748",
+      "timestamp": "2025-10-17T09:51:44.648Z",
+      "type": "deposit",
+      "accountNumber": "123456789012",
+      "amount": 2500,
+      "balanceAfter": 887500,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17606947829803892",
+      "timestamp": "2025-10-17T09:53:02.980Z",
+      "type": "foreign-transfer",
+      "fromAccount": "123456789012",
+      "toAccount": "123456789101",
+      "amount": 12,
+      "currency": "USD",
+      "exchangeRate": 350,
+      "requiredLKR": 4200,
+      "fromBalanceAfter": 883300,
+      "performedBy": null,
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17606949081733313",
+      "timestamp": "2025-10-17T09:55:08.173Z",
+      "type": "deposit",
+      "accountNumber": "123456789012",
+      "amount": 2500,
+      "balanceAfter": 885800,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17606949350253519",
+      "timestamp": "2025-10-17T09:55:35.025Z",
+      "type": "withdraw",
+      "accountNumber": "123456789012",
+      "amount": 2700,
+      "denominations": [
+        1000,
+        500,
+        100
+      ],
+      "balanceAfter": 883100,
+      "performedBy": "123456789012",
+      "ip": "::1"
+    },
+    {
+      "id": "AUDIT17606949661056280",
+      "timestamp": "2025-10-17T09:56:06.105Z",
+      "type": "pin-change",
+      "accountNumber": "123456789012",
+      "performedBy": "123456789012",
+      "ip": "::1"
     }
   ]
 }
